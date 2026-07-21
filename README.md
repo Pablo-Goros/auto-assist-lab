@@ -56,6 +56,8 @@ React (frontend)  ──HTTP──►  FastAPI (backend)  ──►  PostgreSQL
    python -m venv .venv
    .\.venv\Scripts\Activate.ps1
    pip install -e ".[dev]"
+   alembic upgrade head
+   python scripts/seed.py
    uvicorn app.main:app --reload --port 8000
    ```
 
@@ -92,6 +94,38 @@ cd backend
 pytest
 ```
 
+## Database
+
+Apply migrations and load seed data (owner, operator, three workshops):
+
+```powershell
+cd backend
+alembic upgrade head
+python scripts/seed.py
+```
+
+Rollback the latest migration:
+
+```powershell
+alembic downgrade -1
+```
+
+Rollback all migrations:
+
+```powershell
+alembic downgrade base
+```
+
+Map seed users to real Firebase UIDs by setting these variables in `.env` before running
+`python scripts/seed.py`:
+
+```text
+SEED_OWNER_FIREBASE_UID=<firebase uid from Google Sign-In>
+SEED_OPERATOR_FIREBASE_UID=<firebase uid from Google Sign-In>
+```
+
+Re-run the seed script after updating UIDs; it skips records that already exist.
+
 ## Project structure
 
 ```text
@@ -106,5 +140,5 @@ auto-assist-lab/
 
 ## Current phase
 
-Phase 1 — connected project skeleton. See [`docs/implementation.md`](docs/implementation.md)
+Phase 2 — database and migrations. See [`docs/implementation.md`](docs/implementation.md)
 for detailed progress.

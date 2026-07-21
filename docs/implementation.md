@@ -21,7 +21,7 @@ approval before starting a phase or making a significant scope change.
 - [x] Implementation tracker created.
 - [-] Application implementation started.
 
-Overall phase: **Phase 1 in progress**.
+Overall phase: **Phase 2 complete**.
 
 ---
 
@@ -40,9 +40,9 @@ References: Spec §§12–14 and §16.
 Exit gate:
 
 - [x] Frontend runs, tests, type-checks, and builds.
-- [-] Backend runs, tests, type-checks, connects to PostgreSQL, and exposes `/docs`.
-- [!] PostgreSQL reports healthy (Docker Desktop was not running during setup).
-- [ ] Phase close-out is recorded.
+- [x] Backend runs, tests, type-checks, connects to PostgreSQL, and exposes `/docs`.
+- [x] PostgreSQL reports healthy (Docker Desktop was not running during setup).
+- [x] Phase close-out is recorded.
 
 ---
 
@@ -50,19 +50,19 @@ Exit gate:
 
 References: Spec §§9–10.
 
-- [ ] Implement all enums and SQLAlchemy models from the data contract.
-- [ ] Implement relationships, constraints, defaults, indexes, and UTC timestamps.
-- [ ] Configure Alembic from application metadata.
-- [ ] Create and review the initial migration.
-- [ ] Create the owner, operator, and workshop seed workflow.
-- [ ] Add model, constraint, migration, and seed tests.
-- [ ] Document migration, rollback, seed, and Firebase UID mapping commands.
+- [x] Implement all enums and SQLAlchemy models from the data contract.
+- [x] Implement relationships, constraints, defaults, indexes, and UTC timestamps.
+- [x] Configure Alembic from application metadata.
+- [x] Create and review the initial migration.
+- [x] Create the owner, operator, and workshop seed workflow.
+- [x] Add model, constraint, migration, and seed tests.
+- [x] Document migration, rollback, seed, and Firebase UID mapping commands.
 
 Exit gate:
 
-- [ ] A clean database can migrate, seed, downgrade, and re-upgrade reproducibly.
-- [ ] Database schema and seed data match Spec §§9–10.
-- [ ] Phase close-out is recorded.
+- [x] A clean database can migrate, seed, downgrade, and re-upgrade reproducibly.
+- [x] Database schema and seed data match Spec §§9–10.
+- [x] Phase close-out is recorded.
 
 ---
 
@@ -180,6 +180,69 @@ Exit gate:
 ---
 
 ## Phase close-out record
+
+### Phase 1
+
+```text
+Completed on: 2026-07-21
+Status: Complete
+
+Files changed:
+- frontend/, backend/, worker/ skeleton
+- docker-compose.yml, .env.example, .gitignore
+- docs/implementation.md, README.md
+
+Decisions:
+- PostgreSQL exposed on host port 5433 to avoid local conflicts
+- Health check validates database connectivity
+
+Tests added or updated:
+- backend/tests/test_health.py
+- frontend App.test.tsx
+
+Verification commands and results:
+- npm run type-check, npm test, npm run build — pass
+- pytest — pass
+- docker compose ps — postgres healthy
+
+Known limitations or follow-up:
+- Firebase and Pub/Sub deferred to later phases
+```
+
+### Phase 2
+
+```text
+Completed on: 2026-07-21
+Status: Complete
+
+Files changed:
+- backend/app/models/ (enums, User, Workshop, ServiceRequest)
+- backend/migrations/ (Alembic env, initial migration a79f4ae8b243)
+- backend/scripts/seed.py
+- backend/tests/test_models.py, test_migrations.py, test_seed.py
+- backend/alembic.ini, backend/pyproject.toml, backend/app/config.py
+- .env.example, README.md, docs/implementation.md
+
+Decisions:
+- PostgreSQL native enums for role, problem_type, and status
+- Seed script is idempotent (skips existing firebase_uid / workshop name)
+- Separate autoassist_test database for migration/model tests
+- Seed Firebase UIDs configured via SEED_* env vars
+
+Tests added or updated:
+- test_models.py (constraints, defaults, relationships, enums)
+- test_migrations.py (upgrade, downgrade, re-upgrade)
+- test_seed.py (seed data, idempotency)
+
+Verification commands and results:
+- alembic upgrade head — pass
+- alembic downgrade base && alembic upgrade head — pass
+- python scripts/seed.py — pass (owner, operator, 3 workshops)
+- pytest (11 tests) — pass
+
+Known limitations or follow-up:
+- Replace placeholder SEED_*_FIREBASE_UID values with real Firebase UIDs before Phase 5
+```
 
 Copy this block below the completed phase:
 
