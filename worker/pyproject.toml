@@ -1,0 +1,25 @@
+[project]
+name = "autoassist-worker"
+version = "0.1.0"
+description = "AutoAssist Mini Pub/Sub notification worker"
+requires-python = ">=3.12"
+dependencies = [
+    "pydantic-settings>=2.6.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3.0",
+]
+
+[build-system]
+requires = ["setuptools>=75.0.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["app*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

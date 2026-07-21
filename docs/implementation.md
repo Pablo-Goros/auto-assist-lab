@@ -19,9 +19,9 @@ approval before starting a phase or making a significant scope change.
 - [x] Implementation specification created.
 - [x] Agent rules created.
 - [x] Implementation tracker created.
-- [ ] Application implementation started.
+- [-] Application implementation started.
 
-Overall phase: **planning complete; Phase 1 pending approval**.
+Overall phase: **Phase 1 in progress**.
 
 ---
 
@@ -29,19 +29,19 @@ Overall phase: **planning complete; Phase 1 pending approval**.
 
 References: Spec §§12–14 and §16.
 
-- [ ] Create the required `frontend/`, `backend/`, and `worker/` structure.
-- [ ] Bootstrap React + TypeScript + Vite with strict typing and test tooling.
-- [ ] Bootstrap typed FastAPI with configuration, CORS, logging, tests, and OpenAPI.
-- [ ] Add PostgreSQL to Docker Compose and implement SQLAlchemy session management.
-- [ ] Implement and test `GET /api/health`.
-- [ ] Add `.gitignore` and a complete non-sensitive `.env.example`.
-- [ ] Document prerequisites, setup, startup, checks, ports, and architecture.
+- [x] Create the required `frontend/`, `backend/`, and `worker/` structure.
+- [x] Bootstrap React + TypeScript + Vite with strict typing and test tooling.
+- [x] Bootstrap typed FastAPI with configuration, CORS, logging, tests, and OpenAPI.
+- [x] Add PostgreSQL to Docker Compose and implement SQLAlchemy session management.
+- [x] Implement and test `GET /api/health`.
+- [x] Add `.gitignore` and a complete non-sensitive `.env.example`.
+- [x] Document prerequisites, setup, startup, checks, ports, and architecture.
 
 Exit gate:
 
-- [ ] Frontend runs, tests, type-checks, and builds.
-- [ ] Backend runs, tests, type-checks, connects to PostgreSQL, and exposes `/docs`.
-- [ ] PostgreSQL reports healthy.
+- [x] Frontend runs, tests, type-checks, and builds.
+- [-] Backend runs, tests, type-checks, connects to PostgreSQL, and exposes `/docs`.
+- [!] PostgreSQL reports healthy (Docker Desktop was not running during setup).
 - [ ] Phase close-out is recorded.
 
 ---
