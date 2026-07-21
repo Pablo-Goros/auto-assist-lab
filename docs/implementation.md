@@ -21,7 +21,7 @@ approval before starting a phase or making a significant scope change.
 - [x] Implementation tracker created.
 - [-] Application implementation started.
 
-Overall phase: **Phase 2 complete**.
+Overall phase: **Phase 3 complete**.
 
 ---
 
@@ -70,22 +70,22 @@ Exit gate:
 
 References: Spec §§7–8, §15, §16, and backend cases in §17.
 
-- [ ] Define typed Pydantic requests, responses, and consistent API errors.
-- [ ] Add replaceable identity and event-publisher dependency boundaries.
-- [ ] Implement `/api/me`.
-- [ ] Implement owner request creation and owner-only listing.
-- [ ] Implement operator request listing and active-workshop listing.
-- [ ] Implement workshop assignment with validation, transaction handling, and post-commit publisher invocation.
-- [ ] Define and document repeated-assignment behavior.
-- [ ] Document bearer authentication and all contracts in OpenAPI.
-- [ ] Add backend tests for success, ownership, roles, validation, not-found cases, transactions, and publisher ordering.
+- [x] Define typed Pydantic requests, responses, and consistent API errors.
+- [x] Add replaceable identity and event-publisher dependency boundaries.
+- [x] Implement `/api/me`.
+- [x] Implement owner request creation and owner-only listing.
+- [x] Implement operator request listing and active-workshop listing.
+- [x] Implement workshop assignment with validation, transaction handling, and post-commit publisher invocation.
+- [x] Define and document repeated-assignment behavior.
+- [x] Document bearer authentication and all contracts in OpenAPI.
+- [x] Add backend tests for success, ownership, roles, validation, not-found cases, transactions, and publisher ordering.
 
 Exit gate:
 
-- [ ] API contracts are correct and visible in Swagger.
-- [ ] Complete HTTP/PostgreSQL behavior passes through test dependency overrides.
-- [ ] Owner isolation and operator authorization are enforced in FastAPI.
-- [ ] Phase close-out is recorded.
+- [x] API contracts are correct and visible in Swagger.
+- [x] Complete HTTP/PostgreSQL behavior passes through test dependency overrides.
+- [x] Owner isolation and operator authorization are enforced in FastAPI.
+- [x] Phase close-out is recorded.
 
 ---
 
@@ -242,6 +242,38 @@ Verification commands and results:
 
 Known limitations or follow-up:
 - Replace placeholder SEED_*_FIREBASE_UID values with real Firebase UIDs before Phase 5
+```
+
+### Phase 3
+
+```text
+Completed on: 2026-07-21
+Status: Complete
+
+Files changed:
+- backend/app/auth/ (StubAuthProvider, role dependencies)
+- backend/app/schemas/ (Pydantic request/response models)
+- backend/app/routers/ (me, service_requests, operator, workshops)
+- backend/app/services/ (assignment, pubsub event publisher)
+- backend/app/main.py (API router wiring, OpenAPI auth docs)
+- backend/tests/test_api.py, conftest.py
+- README.md, docs/implementation.md
+
+Decisions:
+- Phase 3 uses StubAuthProvider: bearer token value equals firebase_uid
+- EventPublisher protocol with LoggingEventPublisher until Phase 6 Pub/Sub
+- Repeated assignment allowed: updates workshop/assigned_at and republishes event
+- Publish failure after commit returns 500 but assignment persists
+
+Tests added or updated:
+- test_api.py (16 tests: auth, roles, CRUD, assignment, reassignment, publish failure)
+
+Verification commands and results:
+- pytest (27 tests) — pass
+
+Known limitations or follow-up:
+- Firebase Admin token verification deferred to Phase 5
+- Real Pub/Sub publication deferred to Phase 6
 ```
 
 Copy this block below the completed phase:

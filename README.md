@@ -56,9 +56,15 @@ React (frontend)  ──HTTP──►  FastAPI (backend)  ──►  PostgreSQL
    python -m venv .venv
    .\.venv\Scripts\Activate.ps1
    pip install -e ".[dev]"
-   alembic upgrade head
+   ```
+
+   If `alembic` is not recognized, either activate the venv (see `(.venv)` in the
+   prompt) or prefix commands with `.\.venv\Scripts\python.exe -m`:
+
+   ```powershell
+   python -m alembic upgrade head
    python scripts/seed.py
-   uvicorn app.main:app --reload --port 8000
+   python -m uvicorn app.main:app --reload --port 8000
    ```
 
 4. Install and run the frontend (separate terminal):
@@ -140,5 +146,42 @@ auto-assist-lab/
 
 ## Current phase
 
-Phase 2 — database and migrations. See [`docs/implementation.md`](docs/implementation.md)
+Phase 3 — HTTP/PostgreSQL API. See [`docs/implementation.md`](docs/implementation.md)
 for detailed progress.
+
+## API (Phase 3)
+
+Protected endpoints require an `Authorization: Bearer <token>` header. Until Firebase
+is wired in Phase 5, the bearer token value is treated as the seeded `firebase_uid`.
+
+In Swagger (`/docs`), click **Authorize** and enter **only** the UID string (do not
+type `Bearer`). With the default `.env.example` values, use:
+
+| Role | Swagger Authorize value |
+|---|---|
+| Owner | `your-owner-firebase-uid` |
+| Operator | `your-operator-firebase-uid` |
+
+To confirm which UIDs exist in your database:
+
+```powershell
+docker compose exec postgres psql -U autoassist -d autoassist -c "SELECT firebase_uid, role FROM users;"
+```
+
+| Method | Path | Role | Description |
+|---|---|---|---|
+| GET | `/api/health` | — | Health check |
+| GET | `/api/me` | any | Current application user |
+| POST | `/api/service-requests` | OWNER | Create a request |
+| GET | `/api/service-requests/me` | OWNER | List own requests |
+| GET | `/api/operator/service-requests` | OPERATOR | List all requests |
+| GET | `/api/workshops` | OPERATOR | List active workshops |
+| POST | `/api/operator/service-requests/{id}/assign` | OPERATOR | Assign workshop |
+
+Try the API from Swagger UI at http://localhost:8000/docs after starting the backend.
+
+**Repeated assignment:** an already assigned request may be reassigned to another active
+workshop; `assigned_at` is updated and a new `service_request.assigned` event is logged.
+
+**Publish failure:** if event publication fails after commit, the assignment persists and
+the API returns `500` with `"Failed to publish assignment event"`.

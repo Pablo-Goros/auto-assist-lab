@@ -18,10 +18,10 @@ class Settings(BaseSettings):
     cors_origins: str = "http://localhost:5173"
     log_level: str = "INFO"
 
-    seed_owner_firebase_uid: str = "seed-owner-firebase-uid"
+    seed_owner_firebase_uid: str = "your-owner-firebase-uid"
     seed_owner_email: str = "owner@example.com"
     seed_owner_name: str = "Test Owner"
-    seed_operator_firebase_uid: str = "seed-operator-firebase-uid"
+    seed_operator_firebase_uid: str = "your-operator-firebase-uid"
     seed_operator_email: str = "operator@example.com"
     seed_operator_name: str = "Test Operator"
 
