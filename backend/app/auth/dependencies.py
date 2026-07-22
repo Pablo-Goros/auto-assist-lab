@@ -6,12 +6,16 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.auth.provider import AuthProvider, StubAuthProvider
+from app.auth.provider import AuthProvider, FirebaseAuthProvider, StubAuthProvider
+from app.config import settings
 from app.database import get_db
 from app.models import User, UserRole
 
 _bearer_scheme = HTTPBearer(auto_error=False)
-_auth_provider: AuthProvider = StubAuthProvider()
+_auth_provider: AuthProvider = FirebaseAuthProvider(
+    project_id=settings.firebase_project_id,
+    credential_path=settings.firebase_credentials_path,
+)
 
 
 def get_auth_provider() -> AuthProvider:
@@ -24,6 +28,7 @@ def set_auth_provider(provider: AuthProvider) -> None:
 
 
 def reset_auth_provider() -> None:
+    """Restore the credential-free provider used by the test suite."""
     set_auth_provider(StubAuthProvider())
 
 

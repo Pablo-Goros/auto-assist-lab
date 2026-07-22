@@ -17,6 +17,8 @@ class Settings(BaseSettings):
     test_database_url: str = "postgresql+psycopg://autoassist:autoassist@localhost:5433/autoassist_test"
     cors_origins: str = "http://localhost:5173"
     log_level: str = "INFO"
+    firebase_project_id: str = "your-firebase-project-id"
+    google_application_credentials: str | None = None
 
     seed_owner_firebase_uid: str = "your-owner-firebase-uid"
     seed_owner_email: str = "owner@example.com"
@@ -28,6 +30,13 @@ class Settings(BaseSettings):
     @property
     def cors_origin_list(self) -> list[str]:
         return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]
+
+    @property
+    def firebase_credentials_path(self) -> Path | None:
+        if not self.google_application_credentials:
+            return None
+        path = Path(self.google_application_credentials)
+        return path if path.is_absolute() else ROOT_DIR / path
 
 
 settings = Settings()

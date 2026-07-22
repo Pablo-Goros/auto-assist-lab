@@ -7,12 +7,13 @@ from app.auth.dependencies import (
     reset_auth_provider,
     set_auth_provider,
 )
-from app.auth.provider import AuthProvider, AuthenticatedIdentity, StubAuthProvider
+from app.auth.provider import AuthProvider, AuthenticatedIdentity, FirebaseAuthProvider, StubAuthProvider
 
 __all__ = [
     "AuthProvider",
     "AuthenticatedIdentity",
     "CurrentUser",
+    "FirebaseAuthProvider",
     "RequireAdmin",
     "RequireOperator",
     "RequireOwner",

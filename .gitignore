@@ -20,6 +20,7 @@ worker/.venv/
 *.pem
 service-account*.json
 firebase-adminsdk*.json
+secrets/
 
 # Build outputs
 frontend/dist/

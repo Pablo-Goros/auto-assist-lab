@@ -19,7 +19,7 @@ export function LoginPage() {
     if (submitting) return
     setSubmitting(true)
     try {
-      const signedInUser = await signIn('OWNER')
+      const signedInUser = await signIn()
       navigate(dashboardPathForRole(signedInUser.role), { replace: true })
     } catch {
       // The auth context exposes a readable error in the page.

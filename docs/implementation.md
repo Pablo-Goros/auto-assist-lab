@@ -114,18 +114,18 @@ References: Spec §§5–7, configuration in §14, auth errors in §15, and auth
 
 - [ ] Create/configure Firebase, the web app, Google Sign-In, and authorized domains.
 - [ ] Configure local backend credentials without tracking secrets.
-- [ ] Implement React Firebase initialization, auth state, Google login, ID tokens, and logout.
-- [ ] Resolve `/api/me` after login and redirect by database role.
-- [ ] Implement Firebase Admin token verification in FastAPI.
-- [ ] Resolve the Firebase UID to the PostgreSQL user and enforce reusable role dependencies.
-- [ ] Add backend and frontend authentication/authorization tests.
+- [x] Implement React Firebase initialization, auth state, Google login, ID tokens, and logout.
+- [x] Resolve `/api/me` after login and redirect by database role.
+- [x] Implement Firebase Admin token verification in FastAPI.
+- [x] Resolve the Firebase UID to the PostgreSQL user and enforce reusable role dependencies.
+- [x] Add backend and frontend authentication/authorization tests.
 - [ ] Seed real test UIDs and verify protected endpoints through Swagger.
 - [ ] Verify owner and operator flows end to end through the frontend.
 
 Exit gate:
 
-- [ ] Firebase establishes identity and PostgreSQL exclusively establishes application role.
-- [ ] Invalid authentication returns `401`; invalid role returns `403`.
+- [x] Firebase establishes identity and PostgreSQL exclusively establishes application role.
+- [x] Invalid authentication returns `401`; invalid role returns `403`.
 - [ ] The complete authenticated HTTP/PostgreSQL flow works before Pub/Sub begins.
 - [ ] Phase close-out is recorded.
 
@@ -311,6 +311,48 @@ Verification commands and results:
 Known limitations or follow-up:
 - Firebase Google sign-in intentionally remains a replaceable demo adapter until Phase 5
 - The local run skill stop helper has a PowerShell $PID naming conflict; already-running services remained healthy and hot-reloaded successfully
+```
+
+### Phase 5
+
+```text
+Implemented on: 2026-07-22
+Status: Code complete; Firebase provisioning and real-user verification pending
+
+Files changed:
+- frontend/src/firebase.ts and frontend/src/auth/ (Firebase initialization, Google popup, auth state, ID-token refresh, logout)
+- backend/app/auth/ (Firebase Admin verification and production provider wiring)
+- frontend/package.json, frontend/package-lock.json, backend/pyproject.toml
+- frontend/src/App.test.tsx, frontend/src/auth/firebaseAuthAdapter.test.ts, backend/tests/test_auth.py
+- .env.example, .gitignore, README.md, openapi.json, docs/implementation.md
+
+Decisions:
+- Firebase establishes identity; PostgreSQL remains the exclusive source of OWNER, OPERATOR, and ADMIN roles
+- Firebase configuration is initialized lazily so tests can inject credential-free adapters/providers
+- Browser auth state uses onIdTokenChanged so refreshed ID tokens replace expiring tokens in API requests
+- Backend credentials may come from the configured private-key path or Application Default Credentials
+- Unregistered Google identities are rejected until their UID is explicitly seeded with an application role
+
+Tests added or updated:
+- firebaseAuthAdapter.test.ts (Google popup, ID-token changes, logout)
+- test_auth.py (verified identity extraction, invalid token, missing UID)
+- App.test.tsx adapters updated for observable auth state
+
+Verification commands and results:
+- npm test — pass (10 tests)
+- npm run type-check — pass
+- npm run lint — pass
+- npm run build — pass
+- pytest — pass (32 tests)
+- OpenAPI export and TypeScript contract generation — pass
+- live frontend HTTP, /api/health, and PostgreSQL health — pass
+
+Known limitations or follow-up:
+- Create/configure the Firebase project and enable Google Sign-In
+- Add localhost to authorized domains and configure the real VITE_FIREBASE_* values
+- Store a local Admin SDK credential outside version control and configure its path
+- Sign in the owner/operator accounts, seed their real Firebase UIDs, and verify both flows end to end
+- npm audit reports a pre-existing high-severity js-yaml advisory through the openapi-typescript development toolchain
 ```
 
 Copy this block below the completed phase:

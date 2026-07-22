@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "AutoAssist Mini API",
-    "description": "Service request management API for owners and operators. Protected endpoints require `Authorization: Bearer <token>`. During Phase 3 the bearer token value is treated as the seeded `firebase_uid` until Firebase Admin verification is added in Phase 5.",
+    "description": "Service request management API for owners and operators. Protected endpoints require `Authorization: Bearer <firebase-id-token>`. Firebase establishes identity and PostgreSQL establishes application roles.",
     "version": "0.1.0"
   },
   "paths": {

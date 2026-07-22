@@ -160,14 +160,54 @@ auto-assist-lab/
 
 ## Current phase
 
-Phase 4 — functional frontend, complete. See [`docs/implementation.md`](docs/implementation.md)
-for detailed progress and verification results.
+Phase 5 — Firebase authentication, code complete; live Firebase provisioning and real-user
+verification remain. See [`docs/implementation.md`](docs/implementation.md) for detailed progress.
 
-## Frontend (Phase 4)
+## Firebase authentication (Phase 5)
+
+The application now uses Google Sign-In through Firebase in React and verifies every ID token
+with the Firebase Admin SDK in FastAPI. Firebase establishes identity; the `users` table in
+PostgreSQL remains the only source of application roles.
+
+### One-time Firebase setup
+
+1. Create or select a Firebase project in the [Firebase console](https://console.firebase.google.com/).
+2. Add a Web app in **Project settings > General** and copy its `apiKey`, `authDomain`,
+   `projectId`, and `appId` into the matching `VITE_FIREBASE_*` variables in `.env`.
+3. In **Authentication > Sign-in method**, enable Google and choose the project support email.
+4. In **Authentication > Settings > Authorized domains**, add `localhost` for local development.
+5. In **Project settings > Service accounts > Firebase Admin SDK**, generate a private key.
+   Save it as `secrets/firebase-adminsdk.json` and never commit or share it.
+6. Set `FIREBASE_PROJECT_ID` and `GOOGLE_APPLICATION_CREDENTIALS` in `.env` as shown in
+   `.env.example`. Relative credential paths are resolved from the repository root.
+
+Restart both servers after changing Firebase configuration. The Firebase web configuration is
+safe to expose to the browser; the Admin SDK private key is not.
+
+### Register owner and operator roles
+
+AutoAssist deliberately does not assign roles from Google or from browser input. To register a
+test account:
+
+1. Sign in once with Google. The first attempt may end with `User not registered`; this still
+   creates the identity in **Firebase Authentication > Users**.
+2. Copy that user's Firebase UID into `SEED_OWNER_FIREBASE_UID` or
+   `SEED_OPERATOR_FIREBASE_UID` in `.env`, and set the matching email and display name.
+3. Run the seed again:
+
+   ```powershell
+   cd backend
+   .\.venv\Scripts\python.exe scripts/seed.py
+   ```
+
+4. Sign in again. `/api/me` will now resolve the Firebase UID to the PostgreSQL role and route
+   the user to the correct dashboard.
+
+## Frontend
 
 The responsive React interface includes:
 
-- `/login` with a replaceable local auth adapter and owner/operator demo identities.
+- `/login` with Firebase Google Sign-In, session restoration, ID-token refresh, and logout.
 - `/requests` with owner-only data, search, summary metrics, empty/loading/error states,
   and assigned workshop visibility.
 - `/requests/new` with required-field validation, problem types, readable API errors,
@@ -176,29 +216,14 @@ The responsive React interface includes:
   assignment/reassignment, and per-row loading, success, and error feedback.
 - Session and PostgreSQL-role route guards for anonymous, owner, and operator navigation.
 
-Phase 4 uses the seeded Firebase UID placeholders as bearer tokens. You can override them
-for frontend development in `.env`:
+## API
 
-```text
-VITE_DEMO_OWNER_TOKEN=your-owner-firebase-uid
-VITE_DEMO_OPERATOR_TOKEN=your-operator-firebase-uid
-```
+Protected endpoints require an `Authorization: Bearer <firebase-id-token>` header. FastAPI
+verifies its signature, expiry, audience, and issuer through Firebase Admin before resolving the
+UID to an application user.
 
-These values must match `SEED_OWNER_FIREBASE_UID` and `SEED_OPERATOR_FIREBASE_UID`.
-The adapter boundary is replaced by Firebase Google Sign-In in Phase 5.
-
-## API (Phase 3)
-
-Protected endpoints require an `Authorization: Bearer <token>` header. Until Firebase
-is wired in Phase 5, the bearer token value is treated as the seeded `firebase_uid`.
-
-In Swagger (`/docs`), click **Authorize** and enter **only** the UID string (do not
-type `Bearer`). With the default `.env.example` values, use:
-
-| Role | Swagger Authorize value |
-|---|---|
-| Owner | `your-owner-firebase-uid` |
-| Operator | `your-operator-firebase-uid` |
+In Swagger (`/docs`), click **Authorize** and enter only a current Firebase ID token (do not type
+`Bearer`). ID tokens are credentials: use them only locally and never commit or share them.
 
 To confirm which UIDs exist in your database:
 

@@ -1,10 +1,11 @@
-import type { User, UserRole } from '../api/types'
-
-export type SignInIntent = Exclude<UserRole, 'ADMIN'>
+import type { User } from '../api/types'
 
 export interface AuthAdapter {
-  getToken(): Promise<string | null>
-  signIn(intent: SignInIntent): Promise<string>
+  subscribe(
+    onTokenChanged: (token: string | null) => void,
+    onError: (error: Error) => void,
+  ): () => void
+  signIn(): Promise<string>
   signOut(): Promise<void>
 }
 
@@ -15,6 +16,6 @@ export interface AuthContextValue {
   token: string | null
   user: User | null
   error: string | null
-  signIn(intent: SignInIntent): Promise<User>
+  signIn(): Promise<User>
   signOut(): Promise<void>
 }

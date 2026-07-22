@@ -2,8 +2,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import { api } from '../api/client'
 import type { User } from '../api/types'
-import { demoAuthAdapter } from './demoAuthAdapter'
-import type { AuthAdapter, AuthContextValue, AuthStatus, SignInIntent } from './types'
+import { firebaseAuthAdapter } from './firebaseAuthAdapter'
+import type { AuthAdapter, AuthContextValue, AuthStatus } from './types'
 import { AuthContext } from './useAuth'
 
 interface AuthProviderProps {
@@ -11,63 +11,97 @@ interface AuthProviderProps {
   adapter?: AuthAdapter
 }
 
-export function AuthProvider({ children, adapter = demoAuthAdapter }: AuthProviderProps) {
+export function AuthProvider({ children, adapter = firebaseAuthAdapter }: AuthProviderProps) {
   const [status, setStatus] = useState<AuthStatus>('initializing')
   const [token, setToken] = useState<string | null>(null)
   const [user, setUser] = useState<User | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   const clearSession = useCallback(async () => {
-    await adapter.signOut()
-    setToken(null)
-    setUser(null)
-    setError(null)
-    setStatus('anonymous')
+    try {
+      await adapter.signOut()
+    } catch {
+      // A local session must still be cleared if Firebase sign-out cannot reach the network.
+    } finally {
+      setToken(null)
+      setUser(null)
+      setError(null)
+      setStatus('anonymous')
+    }
   }, [adapter])
 
   useEffect(() => {
     let active = true
+    let revision = 0
 
-    void (async () => {
-      try {
-        const restoredToken = await adapter.getToken()
-        if (!restoredToken) {
-          if (active) setStatus('anonymous')
-          return
-        }
-        const restoredUser = await api.getMe(restoredToken)
-        if (active) {
-          setToken(restoredToken)
-          setUser(restoredUser)
-          setStatus('authenticated')
-        }
-      } catch {
-        await adapter.signOut()
+    const unsubscribe = adapter.subscribe(
+      (nextToken) => {
+        const currentRevision = ++revision
+        void (async () => {
+          if (!nextToken) {
+            if (active && currentRevision === revision) {
+              setToken(null)
+              setUser(null)
+              setStatus('anonymous')
+            }
+            return
+          }
+
+          try {
+            const restoredUser = await api.getMe(nextToken)
+            if (active && currentRevision === revision) {
+              setToken(nextToken)
+              setUser(restoredUser)
+              setError(null)
+              setStatus('authenticated')
+            }
+          } catch (caught) {
+            if (active && currentRevision === revision) {
+              setToken(null)
+              setUser(null)
+              setError(caught instanceof Error ? caught.message : 'Your session could not be restored.')
+              setStatus('anonymous')
+            }
+            try {
+              await adapter.signOut()
+            } catch {
+              // Keep the backend session error visible even if Firebase sign-out also fails.
+            }
+          }
+        })()
+      },
+      (caught) => {
         if (active) {
           setToken(null)
           setUser(null)
+          setError(caught.message)
           setStatus('anonymous')
         }
-      }
-    })()
+      },
+    )
 
     return () => {
       active = false
+      unsubscribe()
     }
   }, [adapter])
 
   const signIn = useCallback(
-    async (intent: SignInIntent): Promise<User> => {
+    async (): Promise<User> => {
       setError(null)
       try {
-        const nextToken = await adapter.signIn(intent)
+        const nextToken = await adapter.signIn()
         const nextUser = await api.getMe(nextToken)
         setToken(nextToken)
         setUser(nextUser)
         setStatus('authenticated')
         return nextUser
       } catch (caught) {
-        await adapter.signOut()
+        try {
+          await adapter.signOut()
+        } catch {
+          // Preserve the original sign-in or API error for the user.
+        }
         const message = caught instanceof Error ? caught.message : 'Sign in failed. Please try again.'
         setToken(null)
         setUser(null)

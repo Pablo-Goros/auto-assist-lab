@@ -47,8 +47,11 @@ function jsonResponse(body: unknown, status = 200): Response {
 
 function adapter(restoredToken: string | null = null): AuthAdapter {
   return {
-    getToken: vi.fn(async () => restoredToken),
-    signIn: vi.fn(async (intent) => (intent === 'OWNER' ? 'owner-token' : 'operator-token')),
+    subscribe: vi.fn((onTokenChanged) => {
+      queueMicrotask(() => onTokenChanged(restoredToken))
+      return () => undefined
+    }),
+    signIn: vi.fn(async () => 'owner-token'),
     signOut: vi.fn(async () => undefined),
   }
 }
