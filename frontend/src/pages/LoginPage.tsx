@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
-import type { SignInIntent } from '../auth/types'
 import { useAuth } from '../auth/useAuth'
 import { dashboardPathForRole } from '../auth/roleRouting'
 import { Brand } from '../components/Brand'
@@ -9,7 +8,6 @@ import { Notice } from '../components/Feedback'
 
 export function LoginPage() {
   const { status, user, error, signIn } = useAuth()
-  const [intent, setIntent] = useState<SignInIntent>('OWNER')
   const [submitting, setSubmitting] = useState(false)
   const navigate = useNavigate()
 
@@ -21,7 +19,7 @@ export function LoginPage() {
     if (submitting) return
     setSubmitting(true)
     try {
-      const signedInUser = await signIn(intent)
+      const signedInUser = await signIn('OWNER')
       navigate(dashboardPathForRole(signedInUser.role), { replace: true })
     } catch {
       // The auth context exposes a readable error in the page.
@@ -49,21 +47,9 @@ export function LoginPage() {
         <div className="login-card">
           <div className="login-card__heading">
             <span className="eyebrow">Welcome to AutoAssist</span>
-            <h2>Welcome back</h2>
-            <p>Choose your local demo profile to continue.</p>
+            <h2>Get back on the road</h2>
+            <p>Sign in securely to request roadside help and follow your service updates.</p>
           </div>
-
-          <fieldset className="role-switcher">
-            <legend>Demo account</legend>
-            <label className={intent === 'OWNER' ? 'role-option role-option--selected' : 'role-option'}>
-              <input type="radio" name="role" value="OWNER" checked={intent === 'OWNER'} onChange={() => setIntent('OWNER')} />
-              <span><strong>Vehicle owner</strong><small>Create and track requests</small></span>
-            </label>
-            <label className={intent === 'OPERATOR' ? 'role-option role-option--selected' : 'role-option'}>
-              <input type="radio" name="role" value="OPERATOR" checked={intent === 'OPERATOR'} onChange={() => setIntent('OPERATOR')} />
-              <span><strong>Operator</strong><small>Assign requests to workshops</small></span>
-            </label>
-          </fieldset>
 
           {error && <Notice tone="error">{error}</Notice>}
 
@@ -71,9 +57,8 @@ export function LoginPage() {
             {submitting ? <span className="spinner" /> : <GoogleIcon />}
             {submitting ? 'Signing you in…' : 'Continue with Google'}
           </button>
-          <p className="login-card__hint">Google authentication is connected in Phase 5. This screen currently uses the seeded local identities.</p>
         </div>
-        <p className="security-note">Secure access · Your application role is verified by AutoAssist</p>
+        <p className="security-note">Secure access · Your account is protected by Google</p>
       </section>
     </main>
   )

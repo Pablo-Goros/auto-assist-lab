@@ -19,7 +19,6 @@ interface FormErrors {
 export function NewRequestPage() {
   const { token } = useAuth()
   const navigate = useNavigate()
-  const [search, setSearch] = useState('')
   const [vehicle, setVehicle] = useState('')
   const [problemType, setProblemType] = useState<ProblemType>('BATTERY')
   const [description, setDescription] = useState('')
@@ -54,7 +53,7 @@ export function NewRequestPage() {
   }
 
   return (
-    <AppShell search={search} onSearch={setSearch} searchPlaceholder="Search your requests…">
+    <AppShell>
       <div className="page-heading page-heading--compact">
         <div>
           <Link className="back-link" to="/requests"><ArrowLeftIcon />Back to requests</Link>

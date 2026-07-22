@@ -22,7 +22,6 @@ export function OperatorPage() {
   const [successId, setSuccessId] = useState<number | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<'ALL' | ServiceRequestStatus>('ALL')
 
   const loadData = useCallback(async () => {
@@ -46,14 +45,8 @@ export function OperatorPage() {
   }, [loadData])
 
   const filteredRequests = useMemo(() => {
-    const query = search.trim().toLowerCase()
-    return requests.filter((request) => {
-      const matchesStatus = statusFilter === 'ALL' || request.status === statusFilter
-      const matchesQuery = !query || [String(request.id), request.owner.name, request.owner.email, request.vehicle, request.description, problemMetadata[request.problem_type].label, request.assigned_workshop?.name ?? '']
-        .some((value) => value.toLowerCase().includes(query))
-      return matchesStatus && matchesQuery
-    })
-  }, [requests, search, statusFilter])
+    return requests.filter((request) => statusFilter === 'ALL' || request.status === statusFilter)
+  }, [requests, statusFilter])
 
   async function assignWorkshop(requestId: number) {
     const workshopId = selected[requestId]
@@ -76,7 +69,7 @@ export function OperatorPage() {
   const pendingCount = requests.filter((request) => request.status === 'PENDING').length
 
   return (
-    <AppShell search={search} onSearch={setSearch} searchPlaceholder="Search requests, owners, vehicles…">
+    <AppShell>
       <div className="page-heading">
         <div><span className="eyebrow">Operations dashboard</span><h1>Service requests</h1><p>Review incoming requests and coordinate workshop assignments.</p></div>
         <div className="date-chip"><CalendarIcon />{formatDate(new Date().toISOString())}</div>
@@ -103,7 +96,7 @@ export function OperatorPage() {
         ) : requests.length === 0 ? (
           <div className="empty-state"><ToolIcon /><h3>No incoming requests</h3><p>New service requests will appear here.</p></div>
         ) : filteredRequests.length === 0 ? (
-          <div className="empty-state empty-state--compact"><h3>No matching requests</h3><p>Clear your search or change the status filter.</p></div>
+          <div className="empty-state empty-state--compact"><h3>No matching requests</h3><p>Choose a different status filter.</p></div>
         ) : (
           <div className="request-list operator-request-list">
             <div className="request-list__head operator-request-grid"><span>Request</span><span>Owner</span><span>Vehicle & issue</span><span>Status</span><span>Workshop assignment</span></div>

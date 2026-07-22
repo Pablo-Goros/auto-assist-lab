@@ -69,25 +69,24 @@ afterEach(() => {
 })
 
 describe('Phase 4 frontend', () => {
-  it('renders the login and signs in with the selected demo role', async () => {
+  it('renders the login and signs in without asking for a role', async () => {
     const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
       const url = String(input)
-      if (url.endsWith('/api/me')) return jsonResponse(operator)
-      if (url.endsWith('/api/operator/service-requests')) return jsonResponse([])
-      if (url.endsWith('/api/workshops')) return jsonResponse([])
+      if (url.endsWith('/api/me')) return jsonResponse(owner)
+      if (url.endsWith('/api/service-requests/me')) return jsonResponse([])
       return jsonResponse({}, 404)
     })
     vi.stubGlobal('fetch', fetchMock)
     render(<App authAdapter={adapter()} />)
 
-    expect(await screen.findByRole('heading', { name: 'Welcome back' })).toBeInTheDocument()
-    fireEvent.click(screen.getByRole('radio', { name: /Operator/ }))
+    expect(await screen.findByRole('heading', { name: 'Get back on the road' })).toBeInTheDocument()
+    expect(screen.queryByRole('radio')).not.toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Continue with Google' }))
 
-    expect(await screen.findByRole('heading', { name: 'Service requests', level: 1 })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Hi, Pablo', level: 1 })).toBeInTheDocument()
     expect(fetchMock).toHaveBeenCalledWith(
       expect.stringContaining('/api/me'),
-      expect.objectContaining({ headers: expect.objectContaining({ Authorization: 'Bearer operator-token' }) }),
+      expect.objectContaining({ headers: expect.objectContaining({ Authorization: 'Bearer owner-token' }) }),
     )
   })
 
@@ -133,6 +132,9 @@ describe('Phase 4 frontend', () => {
     expect(await screen.findByText('Honda Civic 2018')).toBeInTheDocument()
     expect(screen.getByText('REQ-0012')).toBeInTheDocument()
     expect(screen.getByText('Pending')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Open profile' }))
+    expect(await screen.findByText('pablo@example.com')).toBeInTheDocument()
+    expect(screen.getByText('Account ID')).toBeInTheDocument()
   })
 
   it('validates and submits a new service request once', async () => {

@@ -1,11 +1,8 @@
-import { useState } from 'react'
 import { AppShell } from '../components/AppShell'
 
 export function AdminPage() {
-  const [search, setSearch] = useState('')
-
   return (
-    <AppShell search={search} onSearch={setSearch} searchPlaceholder="Search administration…">
+    <AppShell>
       <div className="page-heading">
         <div>
           <span className="eyebrow">Administration</span>
