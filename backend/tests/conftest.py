@@ -148,7 +148,8 @@ def api_client(
 
 
 @pytest.fixture
-def seed_data(db_session: Session) -> SeedData:
+def seed_data(db_session: Session, monkeypatch: pytest.MonkeyPatch) -> SeedData:
+    monkeypatch.setattr(settings, "admin_firebase_uid", "admin-test-uid")
     owner = User(
         firebase_uid="owner-test-uid",
         email="owner@test.example",

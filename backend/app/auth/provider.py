@@ -23,9 +23,14 @@ class StubAuthProvider:
     """Test auth: the bearer token value is treated as firebase_uid."""
 
     def verify_token(self, token: str) -> AuthenticatedIdentity:
-        if not token.strip():
+        firebase_uid = token.strip()
+        if not firebase_uid:
             raise ValueError("Invalid authentication token")
-        return AuthenticatedIdentity(firebase_uid=token.strip())
+        return AuthenticatedIdentity(
+            firebase_uid=firebase_uid,
+            email=f"{firebase_uid}@test.example",
+            name=firebase_uid,
+        )
 
 
 class FirebaseAuthProvider:

@@ -11,10 +11,13 @@ def test_me_requires_authentication(api_client: TestClient) -> None:
     assert response.json()["detail"] == "Missing authentication token"
 
 
-def test_me_rejects_unregistered_user(api_client: TestClient) -> None:
+def test_me_provisions_unregistered_user_as_owner(api_client: TestClient) -> None:
     response = api_client.get("/api/me", headers=auth_header("unknown-uid"))
-    assert response.status_code == 401
-    assert response.json()["detail"] == "User not registered"
+    assert response.status_code == 200
+    assert response.json()["firebase_uid"] == "unknown-uid"
+    assert response.json()["email"] == "unknown-uid@test.example"
+    assert response.json()["name"] == "unknown-uid"
+    assert response.json()["role"] == "OWNER"
 
 
 def test_me_returns_current_user(api_client: TestClient, seed_data: SeedData) -> None:

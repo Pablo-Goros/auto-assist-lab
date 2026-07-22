@@ -116,7 +116,7 @@ use `npm run check:api` to fail when either generated file is stale.
 
 ## Database
 
-Apply migrations and load seed data (owner, operator, three workshops):
+Apply migrations and load the three development workshops:
 
 ```powershell
 cd backend
@@ -136,15 +136,13 @@ Rollback all migrations:
 alembic downgrade base
 ```
 
-Map seed users to real Firebase UIDs by setting these variables in `.env` before running
-`python scripts/seed.py`:
+Set the one administrator UID in `.env` before signing in with that account:
 
 ```text
-SEED_OWNER_FIREBASE_UID=<firebase uid from Google Sign-In>
-SEED_OPERATOR_FIREBASE_UID=<firebase uid from Google Sign-In>
+ADMIN_FIREBASE_UID=<firebase uid from Google Sign-In>
 ```
 
-Re-run the seed script after updating UIDs; it skips records that already exist.
+The seed script only manages workshops and is idempotent.
 
 ## Project structure
 
@@ -184,24 +182,17 @@ PostgreSQL remains the only source of application roles.
 Restart both servers after changing Firebase configuration. The Firebase web configuration is
 safe to expose to the browser; the Admin SDK private key is not.
 
-### Register owner and operator roles
+### Registration and roles
 
-AutoAssist deliberately does not assign roles from Google or from browser input. To register a
-test account:
+Every verified Google sign-in is registered automatically as an `OWNER`, using the Firebase email
+and display-name claims. Set `ADMIN_FIREBASE_UID` to the immutable Firebase UID of the one
+administrator; that account is created or reconciled as `ADMIN` on login. The administrator can
+then use `/admin` to switch other registered users between `OWNER` and `OPERATOR`.
 
-1. Sign in once with Google. The first attempt may end with `User not registered`; this still
-   creates the identity in **Firebase Authentication > Users**.
-2. Copy that user's Firebase UID into `SEED_OWNER_FIREBASE_UID` or
-   `SEED_OPERATOR_FIREBASE_UID` in `.env`, and set the matching email and display name.
-3. Run the seed again:
-
-   ```powershell
-   cd backend
-   .\.venv\Scripts\python.exe scripts/seed.py
-   ```
-
-4. Sign in again. `/api/me` will now resolve the Firebase UID to the PostgreSQL role and route
-   the user to the correct dashboard.
+`ADMIN` cannot be granted or removed through the API, including for the configured administrator.
+After a role change, the affected user should refresh or sign in again before using their new
+dashboard. Existing owner/operator/admin records are normalized to `OWNER` by the migration; the
+configured administrator is promoted again on its next authenticated request.
 
 ## Frontend
 
@@ -214,7 +205,8 @@ The responsive React interface includes:
   duplicate-submit protection, and success redirect.
 - `/operator` with owner/request details, search, status filtering, active workshops,
   assignment/reassignment, and per-row loading, success, and error feedback.
-- Session and PostgreSQL-role route guards for anonymous, owner, and operator navigation.
+- Session and PostgreSQL-role route guards for anonymous, owner, operator, and administrator navigation.
+- `/admin` user management with loading, success, and API-error feedback for role changes.
 
 ## API
 
@@ -235,6 +227,8 @@ docker compose exec postgres psql -U autoassist -d autoassist -c "SELECT firebas
 |---|---|---|---|
 | GET | `/api/health` | — | Health check |
 | GET | `/api/me` | any | Current application user |
+| GET | `/api/admin/users` | ADMIN | List registered users |
+| PATCH | `/api/admin/users/{id}/role` | ADMIN | Set an OWNER or OPERATOR role |
 | POST | `/api/service-requests` | OWNER | Create a request |
 | GET | `/api/service-requests/me` | OWNER | List own requests |
 | GET | `/api/operator/service-requests` | OPERATOR | List all requests |

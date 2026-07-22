@@ -49,9 +49,34 @@ def get_current_user(
     except ValueError as exc:
         raise _unauthorized("Invalid authentication token") from exc
 
+    if not identity.email:
+        raise _unauthorized("Authenticated identity is missing an email address")
+
+    configured_admin_uid = settings.admin_firebase_uid.strip()
     user = db.scalar(select(User).where(User.firebase_uid == identity.firebase_uid))
     if user is None:
-        raise _unauthorized("User not registered")
+        user = User(
+            firebase_uid=identity.firebase_uid,
+            email=identity.email,
+            name=identity.name or identity.email,
+            role=(
+                UserRole.ADMIN
+                if identity.firebase_uid == configured_admin_uid and configured_admin_uid
+                else UserRole.OWNER
+            ),
+        )
+        db.add(user)
+    else:
+        # The configured UID is the sole authority for ADMIN; all managed
+        # OWNER/OPERATOR assignments otherwise remain intact until an
+        # administrator changes them. Existing profile details are retained.
+        if identity.firebase_uid == configured_admin_uid and configured_admin_uid:
+            user.role = UserRole.ADMIN
+        elif user.role == UserRole.ADMIN:
+            user.role = UserRole.OWNER
+
+    db.commit()
+    db.refresh(user)
 
     return user
 

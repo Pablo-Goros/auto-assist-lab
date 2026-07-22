@@ -1,3 +1,5 @@
+from typing import Literal
+
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.models.enums import UserRole
@@ -19,3 +21,7 @@ class OwnerSummary(BaseModel):
     id: int
     name: str
     email: str
+
+
+class UserRoleUpdate(BaseModel):
+    role: Literal[UserRole.OWNER, UserRole.OPERATOR]

@@ -115,17 +115,61 @@ describe('Phase 4 frontend', () => {
     expect(window.location.pathname).toBe('/requests')
   })
 
-  it('routes an authenticated administrator to the admin landing page', async () => {
+  it('protects the admin route and renders registered users', async () => {
     setRoute('/admin')
     vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL) => {
       if (String(input).endsWith('/api/me')) return jsonResponse(admin)
+      if (String(input).endsWith('/api/admin/users')) return jsonResponse([admin, owner, operator])
       return jsonResponse({}, 404)
     }))
 
     render(<App authAdapter={adapter('admin-token')} />)
 
-    expect(await screen.findByRole('heading', { name: 'Admin dashboard' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'User management' })).toBeInTheDocument()
     expect(screen.getByText('Administrator')).toBeInTheDocument()
+    expect(await screen.findByText('Operations Team')).toBeInTheDocument()
+  })
+
+  it('redirects an owner away from the admin route', async () => {
+    setRoute('/admin')
+    vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input)
+      if (url.endsWith('/api/me')) return jsonResponse(owner)
+      if (url.endsWith('/api/service-requests/me')) return jsonResponse([])
+      return jsonResponse({}, 404)
+    }))
+
+    render(<App authAdapter={adapter('owner-token')} />)
+
+    expect(await screen.findByRole('heading', { name: 'Hi, Pablo' })).toBeInTheDocument()
+    expect(window.location.pathname).toBe('/requests')
+  })
+
+  it('updates a user role and displays API update errors', async () => {
+    setRoute('/admin')
+    let patchFails = false
+    const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input)
+      if (url.endsWith('/api/me')) return jsonResponse(admin)
+      if (url.endsWith('/api/admin/users')) return jsonResponse([admin, owner, operator])
+      if (url.endsWith('/api/admin/users/1/role') && init?.method === 'PATCH') {
+        return patchFails ? jsonResponse({ detail: 'Role update failed' }, 500) : jsonResponse({ ...owner, role: 'OPERATOR' })
+      }
+      return jsonResponse({}, 404)
+    })
+    vi.stubGlobal('fetch', fetchMock)
+    render(<App authAdapter={adapter('admin-token')} />)
+
+    const [ownerRole] = await screen.findAllByRole('combobox')
+    if (!ownerRole) throw new Error('Expected an owner role selector')
+    fireEvent.change(ownerRole, { target: { value: 'OPERATOR' } })
+    expect(await screen.findByText(/role was updated/)).toBeInTheDocument()
+    const updateCall = fetchMock.mock.calls.find(([input, init]) => String(input).endsWith('/api/admin/users/1/role') && init?.method === 'PATCH')
+    expect(JSON.parse(String(updateCall?.[1]?.body))).toEqual({ role: 'OPERATOR' })
+
+    patchFails = true
+    fireEvent.change(ownerRole, { target: { value: 'OWNER' } })
+    expect(await screen.findByText('Role update failed')).toBeInTheDocument()
   })
 
   it('renders an owner request list with its status', async () => {

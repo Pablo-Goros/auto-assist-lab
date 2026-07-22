@@ -3,6 +3,7 @@ import type {
   OperatorServiceRequest,
   ServiceRequest,
   User,
+  UserRoleUpdate,
   Workshop,
 } from './types'
 
@@ -72,6 +73,14 @@ async function request<T>(path: string, token: string, init?: RequestInit): Prom
 export const api = {
   getMe: (token: string): Promise<User> => request<User>('/me', token),
 
+  getAdminUsers: (token: string): Promise<User[]> => request<User[]>('/admin/users', token),
+
+  updateUserRole: (token: string, userId: number, input: UserRoleUpdate): Promise<User> =>
+    request<User>(`/admin/users/${userId}/role`, token, {
+      method: 'PATCH',
+      body: JSON.stringify(input),
+    }),
+
   getMyRequests: (token: string): Promise<ServiceRequest[]> =>
     request<ServiceRequest[]>('/service-requests/me', token),
 
@@ -92,4 +101,3 @@ export const api = {
       body: JSON.stringify({ workshop_id: workshopId }),
     }),
 }
-

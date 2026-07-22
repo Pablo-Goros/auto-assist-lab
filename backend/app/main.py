@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
 from app.database import check_database_connection
-from app.routers import me, operator, service_requests, workshops
+from app.routers import admin, me, operator, service_requests, workshops
 
 logging.basicConfig(
     level=settings.log_level,
@@ -46,6 +46,7 @@ api_router.include_router(me.router)
 api_router.include_router(service_requests.router)
 api_router.include_router(operator.router)
 api_router.include_router(workshops.router)
+api_router.include_router(admin.router)
 
 
 @api_router.get("/health", tags=["health"])

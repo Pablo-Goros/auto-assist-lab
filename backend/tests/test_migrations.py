@@ -35,3 +35,29 @@ def test_migration_downgrade_and_reupgrade(test_database_url, monkeypatch) -> No
 
     command.downgrade(alembic_config, "base")
     engine.dispose()
+
+
+def test_role_normalization_migration_converts_legacy_operator_and_admin(test_database_url, monkeypatch) -> None:
+    monkeypatch.setattr(settings, "database_url", test_database_url)
+    alembic_config = get_alembic_config(test_database_url)
+    engine = create_engine(test_database_url)
+    command.downgrade(alembic_config, "base")
+    command.upgrade(alembic_config, "c3f5a8d7e921")
+
+    with engine.begin() as connection:
+        connection.execute(text("INSERT INTO users (firebase_uid, email, name, role) VALUES "
+                                "('legacy-owner', 'owner@example.test', 'Owner', 'OWNER'), "
+                                "('legacy-operator', 'operator@example.test', 'Operator', 'OPERATOR'), "
+                                "('legacy-admin', 'admin@example.test', 'Admin', 'ADMIN')"))
+
+    command.upgrade(alembic_config, "head")
+    with engine.connect() as connection:
+        roles = connection.execute(text("SELECT firebase_uid, role::text FROM users ORDER BY firebase_uid")).all()
+    assert roles == [
+        ("legacy-admin", "OWNER"),
+        ("legacy-operator", "OWNER"),
+        ("legacy-owner", "OWNER"),
+    ]
+
+    command.downgrade(alembic_config, "base")
+    engine.dispose()

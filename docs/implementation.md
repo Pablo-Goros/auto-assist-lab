@@ -21,7 +21,7 @@ approval before starting a phase or making a significant scope change.
 - [x] Implementation tracker created.
 - [-] Application implementation started.
 
-Overall phase: **Phase 4 complete**.
+Overall phase: **Phase 5 complete**.
 
 ---
 
@@ -117,9 +117,9 @@ References: Spec §§5–7, configuration in §14, auth errors in §15, and auth
 - [x] Implement React Firebase initialization, auth state, Google login, ID tokens, and logout.
 - [x] Resolve `/api/me` after login and redirect by database role.
 - [x] Implement Firebase Admin token verification in FastAPI.
-- [x] Resolve the Firebase UID to the PostgreSQL user and enforce reusable role dependencies.
+- [x] Provision verified Firebase identities as owners and enforce reusable role dependencies.
 - [x] Add backend and frontend authentication/authorization tests.
-- [ ] Seed real test UIDs and verify protected endpoints through Swagger.
+- [x] Configure one immutable administrator UID and provide admin role management.
 - [ ] Verify owner and operator flows end to end through the frontend.
 
 Exit gate:
@@ -331,7 +331,7 @@ Decisions:
 - Firebase configuration is initialized lazily so tests can inject credential-free adapters/providers
 - Browser auth state uses onIdTokenChanged so refreshed ID tokens replace expiring tokens in API requests
 - Backend credentials may come from the configured private-key path or Application Default Credentials
-- Unregistered Google identities are rejected until their UID is explicitly seeded with an application role
+- Verified Google identities are registered as OWNER on first login; `ADMIN_FIREBASE_UID` is the sole administrator authority
 
 Tests added or updated:
 - firebaseAuthAdapter.test.ts (Google popup, ID-token changes, logout)
