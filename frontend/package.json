@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "check:api": "npm run generate:api && git diff --exit-code -- ../openapi.json src/api/generated.ts",
+    "generate:api": "python ../backend/scripts/export_openapi.py && openapi-typescript ../openapi.json -o src/api/generated.ts",
     "lint": "oxlint",
     "preview": "vite preview",
     "test": "vitest run --config vitest.config.ts",
@@ -23,9 +25,10 @@
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.3",
+    "openapi-typescript": "^7.10.1",
     "jsdom": "^26.1.0",
     "oxlint": "^1.71.0",
-    "typescript": "~6.0.2",
+    "typescript": "~5.9.3",
     "vite": "^8.1.1",
     "vitest": "^3.2.4"
   }

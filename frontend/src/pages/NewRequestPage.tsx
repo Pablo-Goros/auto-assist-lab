@@ -1,19 +1,15 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { api } from '../api/client'
+import { problemMetadata } from '../api/metadata'
 import type { ProblemType } from '../api/types'
 import { useAuth } from '../auth/useAuth'
 import { AppShell } from '../components/AppShell'
 import { Notice } from '../components/Feedback'
 import { ArrowLeftIcon, CarIcon, ToolIcon } from '../components/Icons'
 
-const problemOptions: { value: ProblemType; label: string; description: string }[] = [
-  { value: 'BATTERY', label: 'Battery', description: 'Won’t start or electrical issue' },
-  { value: 'TIRE', label: 'Tire', description: 'Flat, puncture, or wheel problem' },
-  { value: 'MECHANICAL', label: 'Mechanical', description: 'Engine or mechanical fault' },
-  { value: 'TOWING', label: 'Towing', description: 'Vehicle transport required' },
-  { value: 'OTHER', label: 'Other', description: 'Something else needs attention' },
-]
+const problemOptions = (Object.entries(problemMetadata) as [ProblemType, (typeof problemMetadata)[ProblemType]][])
+  .map(([value, metadata]) => ({ value, ...metadata }))
 
 interface FormErrors {
   vehicle?: string

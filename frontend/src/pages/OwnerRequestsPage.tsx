@@ -1,20 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { api } from '../api/client'
+import { problemMetadata } from '../api/metadata'
 import type { ServiceRequest } from '../api/types'
 import { useAuth } from '../auth/useAuth'
 import { AppShell } from '../components/AppShell'
 import { ListSkeleton, Notice } from '../components/Feedback'
 import { ArrowRightIcon, CalendarIcon, CarIcon, PlusIcon, ToolIcon } from '../components/Icons'
 import { StatusBadge } from '../components/StatusBadge'
-
-const problemLabels: Record<ServiceRequest['problem_type'], string> = {
-  BATTERY: 'Battery',
-  TIRE: 'Tire',
-  MECHANICAL: 'Mechanical',
-  TOWING: 'Towing',
-  OTHER: 'Other',
-}
 
 function formatDate(value: string): string {
   return new Intl.DateTimeFormat('en', { month: 'short', day: 'numeric', year: 'numeric' }).format(new Date(value))
@@ -50,7 +43,7 @@ export function OwnerRequestsPage() {
     const query = search.trim().toLowerCase()
     if (!query) return requests
     return requests.filter((request) =>
-      [String(request.id), request.vehicle, request.description, problemLabels[request.problem_type], request.assigned_workshop?.name ?? '']
+      [String(request.id), request.vehicle, request.description, problemMetadata[request.problem_type].label, request.assigned_workshop?.name ?? '']
         .some((value) => value.toLowerCase().includes(query)),
     )
   }, [requests, search])
@@ -99,7 +92,7 @@ export function OwnerRequestsPage() {
               <article className="request-row owner-request-grid" key={request.id}>
                 <div className="request-id"><small>Request</small><strong>REQ-{String(request.id).padStart(4, '0')}</strong></div>
                 <div><small>Vehicle</small><strong>{request.vehicle}</strong></div>
-                <div><small>Issue</small><strong>{problemLabels[request.problem_type]}</strong><span className="muted-line">{request.description}</span></div>
+                <div><small>Issue</small><strong>{problemMetadata[request.problem_type].label}</strong><span className="muted-line">{request.description}</span></div>
                 <div><small>Status</small><StatusBadge status={request.status} />{request.assigned_workshop && <span className="workshop-line">{request.assigned_workshop.name}</span>}</div>
                 <div><small>Last update</small><strong>{formatDate(request.assigned_at ?? request.created_at)}</strong></div>
                 <ArrowRightIcon className="row-arrow" />

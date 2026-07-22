@@ -1,5 +1,6 @@
 import { NavLink, useNavigate } from 'react-router-dom'
 import type { ReactNode } from 'react'
+import { userRoleLabels } from '../api/metadata'
 import { useAuth } from '../auth/useAuth'
 import { Brand } from './Brand'
 import { HomeIcon, LogOutIcon, PlusIcon, SearchIcon } from './Icons'
@@ -66,7 +67,7 @@ export function AppShell({ children, search, onSearch, searchPlaceholder }: AppS
             <span className="avatar">{initials(user.name)}</span>
             <span className="profile-chip__details">
               <strong>{user.name}</strong>
-              <small>{user.role === 'OWNER' ? 'Vehicle owner' : 'Operator'}</small>
+              <small>{userRoleLabels[user.role]}</small>
             </span>
           </div>
         </header>

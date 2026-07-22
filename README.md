@@ -100,6 +100,20 @@ cd backend
 pytest
 ```
 
+### API contract generation
+
+FastAPI's OpenAPI schema is the source of truth for frontend API types. After
+changing a backend request model, response model, or enum, regenerate the
+committed contract and TypeScript definitions:
+
+```powershell
+cd frontend
+npm run generate:api
+```
+
+Do not edit `openapi.json` or `frontend/src/api/generated.ts` manually. CI can
+use `npm run check:api` to fail when either generated file is stale.
+
 ## Database
 
 Apply migrations and load seed data (owner, operator, three workshops):

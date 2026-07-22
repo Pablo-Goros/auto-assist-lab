@@ -1,0 +1,652 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "AutoAssist Mini API",
+    "description": "Service request management API for owners and operators. Protected endpoints require `Authorization: Bearer <token>`. During Phase 3 the bearer token value is treated as the seeded `firebase_uid` until Firebase Admin verification is added in Phase 5.",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/api/me": {
+      "get": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Get the authenticated application user",
+        "operationId": "get_me_api_me_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid authentication token"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/service-requests": {
+      "post": {
+        "tags": [
+          "service-requests"
+        ],
+        "summary": "Create a service request",
+        "operationId": "create_service_request_api_service_requests_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ServiceRequestCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceRequestResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid authentication token"
+          },
+          "403": {
+            "description": "Owner role required"
+          },
+          "422": {
+            "description": "Invalid request body"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/service-requests/me": {
+      "get": {
+        "tags": [
+          "service-requests"
+        ],
+        "summary": "List the authenticated owner's service requests",
+        "operationId": "list_my_service_requests_api_service_requests_me_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ServiceRequestResponse"
+                  },
+                  "type": "array",
+                  "title": "Response List My Service Requests Api Service Requests Me Get"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid authentication token"
+          },
+          "403": {
+            "description": "Owner role required"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/operator/service-requests": {
+      "get": {
+        "tags": [
+          "operator"
+        ],
+        "summary": "List all service requests for operators",
+        "operationId": "list_operator_service_requests_api_operator_service_requests_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/OperatorServiceRequestResponse"
+                  },
+                  "type": "array",
+                  "title": "Response List Operator Service Requests Api Operator Service Requests Get"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid authentication token"
+          },
+          "403": {
+            "description": "Operator role required"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/operator/service-requests/{request_id}/assign": {
+      "post": {
+        "tags": [
+          "operator"
+        ],
+        "summary": "Assign an active workshop to a service request",
+        "description": "Assigns a workshop, sets status to ASSIGNED, and publishes service_request.assigned after the database transaction commits. Reassigning an already assigned request updates the workshop and assigned_at and publishes a new event.",
+        "operationId": "assign_service_request_api_operator_service_requests__request_id__assign_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "request_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Request Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssignWorkshopRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceRequestResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Workshop is inactive"
+          },
+          "401": {
+            "description": "Missing or invalid authentication token"
+          },
+          "403": {
+            "description": "Operator role required"
+          },
+          "404": {
+            "description": "Service request or workshop not found"
+          },
+          "500": {
+            "description": "Assignment persisted but event publication failed"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/workshops": {
+      "get": {
+        "tags": [
+          "workshops"
+        ],
+        "summary": "List active workshops",
+        "operationId": "list_active_workshops_api_workshops_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/WorkshopResponse"
+                  },
+                  "type": "array",
+                  "title": "Response List Active Workshops Api Workshops Get"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid authentication token"
+          },
+          "403": {
+            "description": "Operator role required"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/health": {
+      "get": {
+        "tags": [
+          "health"
+        ],
+        "summary": "Health Check",
+        "description": "Verify that the API and database are reachable.",
+        "operationId": "health_check_api_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object",
+                  "title": "Response Health Check Api Health Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AssignWorkshopRequest": {
+        "properties": {
+          "workshop_id": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Workshop Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "workshop_id"
+        ],
+        "title": "AssignWorkshopRequest"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "OperatorServiceRequestResponse": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "vehicle": {
+            "type": "string",
+            "title": "Vehicle"
+          },
+          "problem_type": {
+            "$ref": "#/components/schemas/ProblemType"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ServiceRequestStatus"
+          },
+          "assigned_workshop": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/WorkshopSummary"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "assigned_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assigned At"
+          },
+          "owner": {
+            "$ref": "#/components/schemas/OwnerSummary"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "vehicle",
+          "problem_type",
+          "description",
+          "status",
+          "assigned_workshop",
+          "created_at",
+          "assigned_at",
+          "owner"
+        ],
+        "title": "OperatorServiceRequestResponse"
+      },
+      "OwnerSummary": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "email": {
+            "type": "string",
+            "title": "Email"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "email"
+        ],
+        "title": "OwnerSummary"
+      },
+      "ProblemType": {
+        "type": "string",
+        "enum": [
+          "BATTERY",
+          "TIRE",
+          "MECHANICAL",
+          "TOWING",
+          "OTHER"
+        ],
+        "title": "ProblemType"
+      },
+      "ServiceRequestCreate": {
+        "properties": {
+          "vehicle": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Vehicle"
+          },
+          "problem_type": {
+            "$ref": "#/components/schemas/ProblemType"
+          },
+          "description": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Description"
+          }
+        },
+        "type": "object",
+        "required": [
+          "vehicle",
+          "problem_type",
+          "description"
+        ],
+        "title": "ServiceRequestCreate"
+      },
+      "ServiceRequestResponse": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "vehicle": {
+            "type": "string",
+            "title": "Vehicle"
+          },
+          "problem_type": {
+            "$ref": "#/components/schemas/ProblemType"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ServiceRequestStatus"
+          },
+          "assigned_workshop": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/WorkshopSummary"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "assigned_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assigned At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "vehicle",
+          "problem_type",
+          "description",
+          "status",
+          "assigned_workshop",
+          "created_at",
+          "assigned_at"
+        ],
+        "title": "ServiceRequestResponse"
+      },
+      "ServiceRequestStatus": {
+        "type": "string",
+        "enum": [
+          "PENDING",
+          "ASSIGNED"
+        ],
+        "title": "ServiceRequestStatus"
+      },
+      "UserResponse": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "firebase_uid": {
+            "type": "string",
+            "title": "Firebase Uid"
+          },
+          "email": {
+            "type": "string",
+            "title": "Email"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "role": {
+            "$ref": "#/components/schemas/UserRole"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "firebase_uid",
+          "email",
+          "name",
+          "role"
+        ],
+        "title": "UserResponse"
+      },
+      "UserRole": {
+        "type": "string",
+        "enum": [
+          "OWNER",
+          "OPERATOR"
+        ],
+        "title": "UserRole"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      },
+      "WorkshopResponse": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "specialty": {
+            "type": "string",
+            "title": "Specialty"
+          },
+          "active": {
+            "type": "boolean",
+            "title": "Active"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "specialty",
+          "active"
+        ],
+        "title": "WorkshopResponse"
+      },
+      "WorkshopSummary": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "specialty": {
+            "type": "string",
+            "title": "Specialty"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "specialty"
+        ],
+        "title": "WorkshopSummary"
+      }
+    },
+    "securitySchemes": {
+      "HTTPBearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  }
+}

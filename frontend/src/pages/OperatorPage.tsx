@@ -1,15 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { api } from '../api/client'
+import { problemMetadata } from '../api/metadata'
 import type { OperatorServiceRequest, ServiceRequestStatus, Workshop } from '../api/types'
 import { useAuth } from '../auth/useAuth'
 import { AppShell } from '../components/AppShell'
 import { ListSkeleton, Notice } from '../components/Feedback'
 import { CalendarIcon, CheckIcon, ToolIcon } from '../components/Icons'
 import { StatusBadge } from '../components/StatusBadge'
-
-const problemLabels: Record<OperatorServiceRequest['problem_type'], string> = {
-  BATTERY: 'Battery', TIRE: 'Tire', MECHANICAL: 'Mechanical', TOWING: 'Towing', OTHER: 'Other',
-}
 
 function formatDate(value: string): string {
   return new Intl.DateTimeFormat('en', { month: 'short', day: 'numeric', year: 'numeric' }).format(new Date(value))
@@ -52,7 +49,7 @@ export function OperatorPage() {
     const query = search.trim().toLowerCase()
     return requests.filter((request) => {
       const matchesStatus = statusFilter === 'ALL' || request.status === statusFilter
-      const matchesQuery = !query || [String(request.id), request.owner.name, request.owner.email, request.vehicle, request.description, problemLabels[request.problem_type], request.assigned_workshop?.name ?? '']
+      const matchesQuery = !query || [String(request.id), request.owner.name, request.owner.email, request.vehicle, request.description, problemMetadata[request.problem_type].label, request.assigned_workshop?.name ?? '']
         .some((value) => value.toLowerCase().includes(query))
       return matchesStatus && matchesQuery
     })
@@ -118,7 +115,7 @@ export function OperatorPage() {
                 <article className="request-row operator-request-grid" key={request.id}>
                   <div className="request-id"><small>Request</small><strong>REQ-{String(request.id).padStart(4, '0')}</strong><span className="muted-line">{formatDate(request.created_at)}</span></div>
                   <div><small>Owner</small><strong>{request.owner.name}</strong><span className="muted-line">{request.owner.email}</span></div>
-                  <div><small>Vehicle & issue</small><strong>{request.vehicle}</strong><span className="muted-line">{problemLabels[request.problem_type]} · {request.description}</span></div>
+                  <div><small>Vehicle & issue</small><strong>{request.vehicle}</strong><span className="muted-line">{problemMetadata[request.problem_type].label} · {request.description}</span></div>
                   <div><small>Status</small><StatusBadge status={request.status} /></div>
                   <div className="assignment-cell">
                     <small>Workshop assignment</small>
