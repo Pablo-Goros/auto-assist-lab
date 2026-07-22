@@ -19,6 +19,14 @@ const operator = {
   role: 'OPERATOR',
 } as const
 
+const admin = {
+  id: 3,
+  firebase_uid: 'admin-token',
+  email: 'admin@example.com',
+  name: 'Admin Team',
+  role: 'ADMIN',
+} as const
+
 const ownerRequest = {
   id: 12,
   vehicle: 'Honda Civic 2018',
@@ -96,6 +104,19 @@ describe('Phase 4 frontend', () => {
 
     expect(await screen.findByRole('heading', { name: 'Hi, Pablo' })).toBeInTheDocument()
     expect(window.location.pathname).toBe('/requests')
+  })
+
+  it('routes an authenticated administrator to the admin landing page', async () => {
+    setRoute('/admin')
+    vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL) => {
+      if (String(input).endsWith('/api/me')) return jsonResponse(admin)
+      return jsonResponse({}, 404)
+    }))
+
+    render(<App authAdapter={adapter('admin-token')} />)
+
+    expect(await screen.findByRole('heading', { name: 'Admin dashboard' })).toBeInTheDocument()
+    expect(screen.getByText('Administrator')).toBeInTheDocument()
   })
 
   it('renders an owner request list with its status', async () => {

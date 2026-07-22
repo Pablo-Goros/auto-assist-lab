@@ -2,6 +2,7 @@ import { NavLink, useNavigate } from 'react-router-dom'
 import type { ReactNode } from 'react'
 import { userRoleLabels } from '../api/metadata'
 import { useAuth } from '../auth/useAuth'
+import { dashboardPathForRole } from '../auth/roleRouting'
 import { Brand } from './Brand'
 import { HomeIcon, LogOutIcon, PlusIcon, SearchIcon } from './Icons'
 
@@ -27,7 +28,7 @@ export function AppShell({ children, search, onSearch, searchPlaceholder }: AppS
 
   if (!user) return null
 
-  const dashboardPath = user.role === 'OWNER' ? '/requests' : '/operator'
+  const dashboardPath = dashboardPathForRole(user.role)
 
   async function handleSignOut() {
     await signOut()

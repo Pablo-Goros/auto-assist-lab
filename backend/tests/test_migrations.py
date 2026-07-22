@@ -1,5 +1,5 @@
 from alembic import command
-from sqlalchemy import create_engine, inspect
+from sqlalchemy import create_engine, inspect, text
 
 from app.config import settings
 from tests.conftest import get_alembic_config
@@ -9,6 +9,11 @@ def test_initial_migration_creates_expected_tables(migrated_test_db) -> None:
     inspector = inspect(migrated_test_db)
     table_names = set(inspector.get_table_names())
     assert {"users", "workshops", "service_requests"}.issubset(table_names)
+    with migrated_test_db.connect() as connection:
+        roles = connection.execute(
+            text("SELECT enumlabel FROM pg_enum JOIN pg_type ON pg_enum.enumtypid = pg_type.oid WHERE typname = 'user_role'")
+        ).scalars().all()
+    assert roles == ["OWNER", "OPERATOR", "ADMIN"]
 
 
 def test_migration_downgrade_and_reupgrade(test_database_url, monkeypatch) -> None:

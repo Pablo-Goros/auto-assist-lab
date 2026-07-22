@@ -65,4 +65,5 @@ def require_role(required_role: UserRole) -> Callable[..., User]:
 
 RequireOwner = Annotated[User, Depends(require_role(UserRole.OWNER))]
 RequireOperator = Annotated[User, Depends(require_role(UserRole.OPERATOR))]
+RequireAdmin = Annotated[User, Depends(require_role(UserRole.ADMIN))]
 CurrentUser = Annotated[User, Depends(get_current_user)]

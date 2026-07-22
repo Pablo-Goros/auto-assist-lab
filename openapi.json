@@ -546,7 +546,8 @@
         "type": "string",
         "enum": [
           "OWNER",
-          "OPERATOR"
+          "OPERATOR",
+          "ADMIN"
         ],
         "title": "UserRole"
       },

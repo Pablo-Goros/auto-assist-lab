@@ -1,5 +1,6 @@
 from app.auth.dependencies import (
     CurrentUser,
+    RequireAdmin,
     RequireOperator,
     RequireOwner,
     get_auth_provider,
@@ -12,6 +13,7 @@ __all__ = [
     "AuthProvider",
     "AuthenticatedIdentity",
     "CurrentUser",
+    "RequireAdmin",
     "RequireOperator",
     "RequireOwner",
     "StubAuthProvider",

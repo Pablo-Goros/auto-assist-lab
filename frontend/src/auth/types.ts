@@ -1,6 +1,6 @@
 import type { User, UserRole } from '../api/types'
 
-export type SignInIntent = UserRole
+export type SignInIntent = Exclude<UserRole, 'ADMIN'>
 
 export interface AuthAdapter {
   getToken(): Promise<string | null>
@@ -18,4 +18,3 @@ export interface AuthContextValue {
   signIn(intent: SignInIntent): Promise<User>
   signOut(): Promise<void>
 }
-

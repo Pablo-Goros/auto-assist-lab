@@ -225,7 +225,7 @@ export interface components {
          * UserRole
          * @enum {string}
          */
-        UserRole: "OWNER" | "OPERATOR";
+        UserRole: "OWNER" | "OPERATOR" | "ADMIN";
         /** ValidationError */
         ValidationError: {
             /** Location */

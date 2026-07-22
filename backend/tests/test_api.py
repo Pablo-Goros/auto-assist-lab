@@ -30,6 +30,23 @@ def test_me_returns_current_user(api_client: TestClient, seed_data: SeedData) ->
     }
 
 
+def test_me_returns_admin_role(api_client: TestClient, seed_data: SeedData) -> None:
+    response = api_client.get("/api/me", headers=auth_header(seed_data.admin.firebase_uid))
+
+    assert response.status_code == 200
+    assert response.json()["role"] == "ADMIN"
+
+
+def test_admin_has_no_owner_or_operator_permissions(
+    api_client: TestClient,
+    seed_data: SeedData,
+) -> None:
+    headers = auth_header(seed_data.admin.firebase_uid)
+
+    assert api_client.get("/api/service-requests/me", headers=headers).status_code == 403
+    assert api_client.get("/api/operator/service-requests", headers=headers).status_code == 403
+
+
 def test_owner_creates_service_request(api_client: TestClient, seed_data: SeedData) -> None:
     response = api_client.post(
         "/api/service-requests",

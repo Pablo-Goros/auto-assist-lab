@@ -16,4 +16,5 @@ export const serviceRequestStatusLabels = {
 export const userRoleLabels = {
   OWNER: 'Vehicle owner',
   OPERATOR: 'Operator',
+  ADMIN: 'Administrator',
 } satisfies Record<UserRole, string>

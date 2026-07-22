@@ -4,6 +4,7 @@ import enum
 class UserRole(str, enum.Enum):
     OWNER = "OWNER"
     OPERATOR = "OPERATOR"
+    ADMIN = "ADMIN"
 
 
 class ProblemType(str, enum.Enum):

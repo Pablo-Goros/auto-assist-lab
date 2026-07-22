@@ -60,6 +60,7 @@ class RecordingEventPublisher:
 class SeedData:
     owner: User
     operator: User
+    admin: User
     other_owner: User
     workshops: list[Workshop] = field(default_factory=list)
     owner_request: ServiceRequest | None = None
@@ -102,6 +103,8 @@ def migrated_test_db(
     command.downgrade(alembic_config, "base")
     command.upgrade(alembic_config, "head")
     yield test_db_engine
+    with test_db_engine.begin() as connection:
+        connection.execute(text("DELETE FROM users WHERE role::text = 'ADMIN'"))
     command.downgrade(alembic_config, "base")
 
 
@@ -164,12 +167,18 @@ def seed_data(db_session: Session) -> SeedData:
         name="Operator Test",
         role=UserRole.OPERATOR,
     )
+    admin = User(
+        firebase_uid="admin-test-uid",
+        email="admin@test.example",
+        name="Admin Test",
+        role=UserRole.ADMIN,
+    )
     workshops = [
         Workshop(name="Active Workshop", specialty="BATTERY", active=True),
         Workshop(name="Inactive Workshop", specialty="TIRE", active=False),
     ]
 
-    db_session.add_all([owner, other_owner, operator, *workshops])
+    db_session.add_all([owner, other_owner, operator, admin, *workshops])
     db_session.flush()
 
     owner_request = ServiceRequest(
@@ -189,12 +198,13 @@ def seed_data(db_session: Session) -> SeedData:
     db_session.add_all([owner_request, other_owner_request])
     db_session.commit()
 
-    for entity in (owner, other_owner, operator, owner_request, other_owner_request, *workshops):
+    for entity in (owner, other_owner, operator, admin, owner_request, other_owner_request, *workshops):
         db_session.refresh(entity)
 
     return SeedData(
         owner=owner,
         operator=operator,
+        admin=admin,
         other_owner=other_owner,
         workshops=workshops,
         owner_request=owner_request,

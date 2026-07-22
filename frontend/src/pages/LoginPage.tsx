@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 import type { SignInIntent } from '../auth/types'
 import { useAuth } from '../auth/useAuth'
+import { dashboardPathForRole } from '../auth/roleRouting'
 import { Brand } from '../components/Brand'
 import { GoogleIcon } from '../components/Icons'
 import { Notice } from '../components/Feedback'
@@ -13,7 +14,7 @@ export function LoginPage() {
   const navigate = useNavigate()
 
   if (status === 'authenticated' && user) {
-    return <Navigate to={user.role === 'OWNER' ? '/requests' : '/operator'} replace />
+    return <Navigate to={dashboardPathForRole(user.role)} replace />
   }
 
   async function handleSignIn() {
@@ -21,7 +22,7 @@ export function LoginPage() {
     setSubmitting(true)
     try {
       const signedInUser = await signIn(intent)
-      navigate(signedInUser.role === 'OWNER' ? '/requests' : '/operator', { replace: true })
+      navigate(dashboardPathForRole(signedInUser.role), { replace: true })
     } catch {
       // The auth context exposes a readable error in the page.
     } finally {
