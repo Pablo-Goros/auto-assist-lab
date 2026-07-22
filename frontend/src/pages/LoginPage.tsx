@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Navigate, useNavigate } from 'react-router-dom'
+import { Navigate } from 'react-router-dom'
 import { useAuth } from '../auth/useAuth'
 import { dashboardPathForRole } from '../auth/roleRouting'
 import { Brand } from '../components/Brand'
@@ -9,7 +9,6 @@ import { Notice } from '../components/Feedback'
 export function LoginPage() {
   const { status, user, error, signIn } = useAuth()
   const [submitting, setSubmitting] = useState(false)
-  const navigate = useNavigate()
 
   if (status === 'authenticated' && user) {
     return <Navigate to={dashboardPathForRole(user.role)} replace />
@@ -19,8 +18,7 @@ export function LoginPage() {
     if (submitting) return
     setSubmitting(true)
     try {
-      const signedInUser = await signIn()
-      navigate(dashboardPathForRole(signedInUser.role), { replace: true })
+      await signIn()
     } catch {
       // The auth context exposes a readable error in the page.
     } finally {

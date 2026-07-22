@@ -16,6 +16,6 @@ export interface AuthContextValue {
   token: string | null
   user: User | null
   error: string | null
-  signIn(): Promise<User>
+  signIn(): Promise<void>
   signOut(): Promise<void>
 }

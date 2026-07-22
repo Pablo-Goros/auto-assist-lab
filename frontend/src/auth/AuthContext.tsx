@@ -87,15 +87,12 @@ export function AuthProvider({ children, adapter = firebaseAuthAdapter }: AuthPr
   }, [adapter])
 
   const signIn = useCallback(
-    async (): Promise<User> => {
+    async (): Promise<void> => {
       setError(null)
       try {
-        const nextToken = await adapter.signIn()
-        const nextUser = await api.getMe(nextToken)
-        setToken(nextToken)
-        setUser(nextUser)
-        setStatus('authenticated')
-        return nextUser
+        // The auth-state subscription is the single path that exchanges the
+        // Firebase token for the application user via /api/me.
+        await adapter.signIn()
       } catch (caught) {
         try {
           await adapter.signOut()

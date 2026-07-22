@@ -46,12 +46,18 @@ function jsonResponse(body: unknown, status = 200): Response {
 }
 
 function adapter(restoredToken: string | null = null): AuthAdapter {
+  let tokenObserver: ((token: string | null) => void) | undefined
+
   return {
     subscribe: vi.fn((onTokenChanged) => {
+      tokenObserver = onTokenChanged
       queueMicrotask(() => onTokenChanged(restoredToken))
       return () => undefined
     }),
-    signIn: vi.fn(async () => 'owner-token'),
+    signIn: vi.fn(async () => {
+      tokenObserver?.('owner-token')
+      return 'owner-token'
+    }),
     signOut: vi.fn(async () => undefined),
   }
 }
@@ -91,6 +97,7 @@ describe('Phase 4 frontend', () => {
       expect.stringContaining('/api/me'),
       expect.objectContaining({ headers: expect.objectContaining({ Authorization: 'Bearer owner-token' }) }),
     )
+    expect(fetchMock.mock.calls.filter(([input]) => String(input).endsWith('/api/me'))).toHaveLength(1)
   })
 
   it('redirects an owner away from the operator route', async () => {
