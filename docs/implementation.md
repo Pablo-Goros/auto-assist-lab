@@ -21,7 +21,7 @@ approval before starting a phase or making a significant scope change.
 - [x] Implementation tracker created.
 - [-] Application implementation started.
 
-Overall phase: **Phase 3 complete**.
+Overall phase: **Phase 4 complete**.
 
 ---
 
@@ -93,18 +93,18 @@ Exit gate:
 
 References: Spec §§4–5, frontend responsibilities in §6, and frontend cases in §17.
 
-- [ ] Implement the typed HTTP client and readable API error handling.
-- [ ] Implement `/login`, `/requests`, `/requests/new`, and `/operator`.
-- [ ] Implement session and role route guards behind a replaceable auth boundary.
-- [ ] Implement all required owner and operator actions.
-- [ ] Implement loading, empty, error, success, and duplicate-submit states.
-- [ ] Add frontend tests for rendering, redirects, forms, lists, assignment, and UI states.
+- [x] Implement the typed HTTP client and readable API error handling.
+- [x] Implement `/login`, `/requests`, `/requests/new`, and `/operator`.
+- [x] Implement session and role route guards behind a replaceable auth boundary.
+- [x] Implement all required owner and operator actions.
+- [x] Implement loading, empty, error, success, and duplicate-submit states.
+- [x] Add frontend tests for rendering, redirects, forms, lists, assignment, and UI states.
 
 Exit gate:
 
-- [ ] All required screens work against the stable local API contract.
-- [ ] Frontend tests, lint, type-check, and production build pass.
-- [ ] Phase close-out is recorded.
+- [x] All required screens work against the stable local API contract.
+- [x] Frontend tests, lint, type-check, and production build pass.
+- [x] Phase close-out is recorded.
 
 ---
 
@@ -274,6 +274,43 @@ Verification commands and results:
 Known limitations or follow-up:
 - Firebase Admin token verification deferred to Phase 5
 - Real Pub/Sub publication deferred to Phase 6
+```
+
+### Phase 4
+
+```text
+Completed on: 2026-07-22
+Status: Complete
+
+Files changed:
+- frontend/src/api/ (typed contracts, HTTP client, readable API errors)
+- frontend/src/auth/ (replaceable demo adapter, session context, role guards)
+- frontend/src/components/ and frontend/src/pages/ (responsive login, owner, request form, operator UI)
+- frontend/src/assets/autoassist-logo.png and frontend/src/App.css (reference-guided visual system)
+- frontend/src/App.test.tsx, frontend/package.json, frontend/package-lock.json
+- .env.example, README.md, docs/implementation.md
+
+Decisions:
+- Demo auth is isolated behind AuthAdapter until Firebase replaces it in Phase 5
+- Local owner/operator tokens default to the seeded firebase_uid placeholders and can be overridden with VITE_DEMO_* variables
+- React Router guards redirect anonymous users to login and authenticated users to the dashboard for their PostgreSQL role
+- Assignment controls prevent concurrent and unchanged duplicate submissions while preserving the Phase 3 reassignment contract
+- Supplied visual references drive the navy/electric-blue responsive design and the supplied logo was prepared as a transparent PNG
+
+Tests added or updated:
+- App.test.tsx (6 tests: login, role redirect, owner list, form validation/submission, assignment, loading/error states)
+
+Verification commands and results:
+- npm test — pass (6 tests)
+- npm run type-check — pass
+- npm run lint — pass
+- npm run build — pass
+- live GET /api/health and frontend HTTP response — pass
+- 1440px headless browser visual inspection of /login — pass
+
+Known limitations or follow-up:
+- Firebase Google sign-in intentionally remains a replaceable demo adapter until Phase 5
+- The local run skill stop helper has a PowerShell $PID naming conflict; already-running services remained healthy and hot-reloaded successfully
 ```
 
 Copy this block below the completed phase:

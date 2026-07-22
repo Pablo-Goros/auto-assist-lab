@@ -146,8 +146,32 @@ auto-assist-lab/
 
 ## Current phase
 
-Phase 3 — HTTP/PostgreSQL API. See [`docs/implementation.md`](docs/implementation.md)
-for detailed progress.
+Phase 4 — functional frontend, complete. See [`docs/implementation.md`](docs/implementation.md)
+for detailed progress and verification results.
+
+## Frontend (Phase 4)
+
+The responsive React interface includes:
+
+- `/login` with a replaceable local auth adapter and owner/operator demo identities.
+- `/requests` with owner-only data, search, summary metrics, empty/loading/error states,
+  and assigned workshop visibility.
+- `/requests/new` with required-field validation, problem types, readable API errors,
+  duplicate-submit protection, and success redirect.
+- `/operator` with owner/request details, search, status filtering, active workshops,
+  assignment/reassignment, and per-row loading, success, and error feedback.
+- Session and PostgreSQL-role route guards for anonymous, owner, and operator navigation.
+
+Phase 4 uses the seeded Firebase UID placeholders as bearer tokens. You can override them
+for frontend development in `.env`:
+
+```text
+VITE_DEMO_OWNER_TOKEN=your-owner-firebase-uid
+VITE_DEMO_OPERATOR_TOKEN=your-operator-firebase-uid
+```
+
+These values must match `SEED_OWNER_FIREBASE_UID` and `SEED_OPERATOR_FIREBASE_UID`.
+The adapter boundary is replaced by Firebase Google Sign-In in Phase 5.
 
 ## API (Phase 3)
 

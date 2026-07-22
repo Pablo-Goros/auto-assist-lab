@@ -1,0 +1,117 @@
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Link, useLocation } from 'react-router-dom'
+import { api } from '../api/client'
+import type { ServiceRequest } from '../api/types'
+import { useAuth } from '../auth/useAuth'
+import { AppShell } from '../components/AppShell'
+import { ListSkeleton, Notice } from '../components/Feedback'
+import { ArrowRightIcon, CalendarIcon, CarIcon, PlusIcon, ToolIcon } from '../components/Icons'
+import { StatusBadge } from '../components/StatusBadge'
+
+const problemLabels: Record<ServiceRequest['problem_type'], string> = {
+  BATTERY: 'Battery',
+  TIRE: 'Tire',
+  MECHANICAL: 'Mechanical',
+  TOWING: 'Towing',
+  OTHER: 'Other',
+}
+
+function formatDate(value: string): string {
+  return new Intl.DateTimeFormat('en', { month: 'short', day: 'numeric', year: 'numeric' }).format(new Date(value))
+}
+
+export function OwnerRequestsPage() {
+  const { token, user } = useAuth()
+  const [requests, setRequests] = useState<ServiceRequest[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [search, setSearch] = useState('')
+  const location = useLocation()
+  const success = (location.state as { created?: boolean } | null)?.created
+
+  const loadRequests = useCallback(async () => {
+    if (!token) return
+    setLoading(true)
+    setError(null)
+    try {
+      setRequests(await api.getMyRequests(token))
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : 'Could not load your service requests.')
+    } finally {
+      setLoading(false)
+    }
+  }, [token])
+
+  useEffect(() => {
+    void loadRequests()
+  }, [loadRequests])
+
+  const filteredRequests = useMemo(() => {
+    const query = search.trim().toLowerCase()
+    if (!query) return requests
+    return requests.filter((request) =>
+      [String(request.id), request.vehicle, request.description, problemLabels[request.problem_type], request.assigned_workshop?.name ?? '']
+        .some((value) => value.toLowerCase().includes(query)),
+    )
+  }, [requests, search])
+
+  const assignedCount = requests.filter((request) => request.status === 'ASSIGNED').length
+  const firstName = user?.name.split(/\s+/)[0] ?? 'there'
+
+  return (
+    <AppShell search={search} onSearch={setSearch} searchPlaceholder="Search your requests…">
+      <div className="page-heading">
+        <div>
+          <span className="eyebrow">Owner dashboard</span>
+          <h1>Hi, {firstName}</h1>
+          <p>Here’s a summary of your roadside service requests.</p>
+        </div>
+        <Link className="button button--primary" to="/requests/new"><PlusIcon />New request</Link>
+      </div>
+
+      <section className="metric-grid" aria-label="Request summary">
+        <article className="metric-card"><span className="metric-card__icon"><CarIcon /></span><div><strong>{requests.length}</strong><span>Total requests</span></div></article>
+        <article className="metric-card"><span className="metric-card__icon metric-card__icon--amber"><CalendarIcon /></span><div><strong>{requests.length - assignedCount}</strong><span>Awaiting assignment</span></div></article>
+        <article className="metric-card"><span className="metric-card__icon metric-card__icon--green"><ToolIcon /></span><div><strong>{assignedCount}</strong><span>Workshop assigned</span></div></article>
+      </section>
+
+      {success && <Notice tone="success">Your service request was created successfully.</Notice>}
+      {error && <Notice tone="error">{error}</Notice>}
+
+      <section className="data-card">
+        <div className="data-card__header">
+          <div><h2>My service requests</h2><p>Updates from your most recent requests.</p></div>
+          {!loading && <span className="result-count">{filteredRequests.length} {filteredRequests.length === 1 ? 'request' : 'requests'}</span>}
+        </div>
+
+        {loading ? (
+          <ListSkeleton />
+        ) : error ? (
+          <div className="empty-state"><AlertGraphic /><h3>We couldn’t load your requests</h3><p>Try again in a moment.</p><button className="button button--secondary" onClick={() => void loadRequests()}>Try again</button></div>
+        ) : requests.length === 0 ? (
+          <div className="empty-state"><CarIcon /><h3>No service requests yet</h3><p>Create your first request and we’ll help you find a workshop.</p><Link className="button button--primary" to="/requests/new">Create request</Link></div>
+        ) : filteredRequests.length === 0 ? (
+          <div className="empty-state empty-state--compact"><h3>No matching requests</h3><p>Try a different search.</p></div>
+        ) : (
+          <div className="request-list owner-request-list">
+            <div className="request-list__head owner-request-grid"><span>Request</span><span>Vehicle</span><span>Issue</span><span>Status</span><span>Last update</span><span /></div>
+            {filteredRequests.map((request) => (
+              <article className="request-row owner-request-grid" key={request.id}>
+                <div className="request-id"><small>Request</small><strong>REQ-{String(request.id).padStart(4, '0')}</strong></div>
+                <div><small>Vehicle</small><strong>{request.vehicle}</strong></div>
+                <div><small>Issue</small><strong>{problemLabels[request.problem_type]}</strong><span className="muted-line">{request.description}</span></div>
+                <div><small>Status</small><StatusBadge status={request.status} />{request.assigned_workshop && <span className="workshop-line">{request.assigned_workshop.name}</span>}</div>
+                <div><small>Last update</small><strong>{formatDate(request.assigned_at ?? request.created_at)}</strong></div>
+                <ArrowRightIcon className="row-arrow" />
+              </article>
+            ))}
+          </div>
+        )}
+      </section>
+    </AppShell>
+  )
+}
+
+function AlertGraphic() {
+  return <span className="empty-state__graphic">!</span>
+}
