@@ -21,7 +21,7 @@ approval before starting a phase or making a significant scope change.
 - [x] Implementation tracker created.
 - [-] Application implementation started.
 
-Overall phase: **Phase 5 complete**.
+Overall phase: **Phase 5 complete; Phase 6 (country tenancy) is next**.
 
 ---
 
@@ -112,69 +112,115 @@ Exit gate:
 
 References: Spec §§5–7, configuration in §14, auth errors in §15, and auth cases in §17.
 
-- [ ] Create/configure Firebase, the web app, Google Sign-In, and authorized domains.
-- [ ] Configure local backend credentials without tracking secrets.
+- [x] Create/configure Firebase, the web app, Google Sign-In, and authorized domains.
+- [x] Configure local backend credentials without tracking secrets.
 - [x] Implement React Firebase initialization, auth state, Google login, ID tokens, and logout.
 - [x] Resolve `/api/me` after login and redirect by database role.
 - [x] Implement Firebase Admin token verification in FastAPI.
 - [x] Provision verified Firebase identities as owners and enforce reusable role dependencies.
 - [x] Add backend and frontend authentication/authorization tests.
 - [x] Configure one immutable administrator UID and provide admin role management.
-- [ ] Verify owner and operator flows end to end through the frontend.
+- [x] Verify owner and operator flows end to end through the frontend.
 
 Exit gate:
 
 - [x] Firebase establishes identity and PostgreSQL exclusively establishes application role.
 - [x] Invalid authentication returns `401`; invalid role returns `403`.
-- [ ] The complete authenticated HTTP/PostgreSQL flow works before Pub/Sub begins.
-- [ ] Phase close-out is recorded.
+- [x] The complete authenticated HTTP/PostgreSQL flow works before Pub/Sub begins.
+- [x] Phase close-out is recorded.
 
 ---
 
-## Phase 6 — Pub/Sub and worker
+## Phase 6 — Country tenancy
 
-References: Spec §11, worker configuration in §14, related errors in §15, and worker cases in §17.
+References: the tenancy amendments to Spec §§7–10, API configuration in §14, and backend/frontend cases in §17.
 
-- [ ] Provision/document the topic, subscription, and least-privilege permissions.
-- [ ] Implement the typed `service_request.assigned` event contract.
-- [ ] Implement backend publication after assignment commit.
-- [ ] Define and document commit-then-publish failure behavior.
-- [ ] Implement the independent worker, validation, notification output, logging, and shutdown.
-- [ ] Acknowledge only successfully processed messages.
-- [ ] Add publisher and worker tests with mocked cloud clients.
-- [ ] Verify assignment, publication, consumption, output, and acknowledgment end to end.
+- [ ] Add the `tenants` model and seed exactly `AR` (Argentina) and `CL` (Chile).
+- [ ] Migrate existing users, workshops, and service requests to Argentina; make workshop and request tenancy mandatory.
+- [ ] Enforce tenant-safe owner and workshop relationships with database constraints and tenant-scoped queries.
+- [ ] Add one-time tenant selection after first Firebase login; return `409` from tenant-scoped endpoints until selection completes.
+- [ ] Keep the configured administrator global and add tenant correction for accounts without service-request history.
+- [ ] Extend `/api/me`, admin user responses, OpenAPI, generated frontend types, and the admin UI with tenant information.
+- [ ] Add the tenant-selection screen and prevent owner/operator cross-tenant listings and assignments.
+- [ ] Add migration, API, and frontend tests for selection, isolation, corrections, and cross-tenant not-found behavior.
 
 Exit gate:
 
-- [ ] The separate worker processes the specified event successfully.
-- [ ] Publish failures and worker failures behave as documented.
+- [ ] A user belongs to exactly one country tenant after onboarding; the administrator remains global.
+- [ ] Owners, operators, workshops, and assignments cannot cross tenant boundaries.
+- [ ] Existing development data migrates reproducibly to Argentina and both countries have usable workshop seed data.
 - [ ] Phase close-out is recorded.
 
 ---
 
-## Phase 7 — Hardening and project close
+## Phase 7 — Local Pub/Sub and notification worker
 
-References: Spec §§15–17, acceptance criteria in §19, and technical objectives in §20.
+References: Spec §11, worker configuration in §14, related errors in §15, worker cases in §17, and the tenant event contract from Phase 6.
 
-- [ ] Verify every required API and UI error path.
-- [ ] Verify ownership, role enforcement, CORS, secret handling, and fail-closed configuration.
-- [ ] Run formatter, lint, type-check, tests, builds, migration checks, and optional CI.
-- [ ] Complete README setup, architecture, configuration, Swagger, cloud, testing, and demo documentation.
-- [ ] Run the full clean-environment owner/operator demonstration.
-- [ ] Resolve or document all remaining limitations.
+- [ ] Add an optional Docker Compose Pub/Sub emulator profile exposed on port 8085.
+- [ ] Add an idempotent client-library bootstrap script for the local topic and pull subscription.
+- [ ] Add `GCP_PROJECT_ID`, topic, subscription, and optional `PUBSUB_EMULATOR_HOST` configuration to the backend, worker, and `.env.example`.
+- [ ] Define the versioned `service_request.assigned` JSON contract with event ID, tenant code, request/owner/workshop data, and timestamp.
+- [ ] Replace the logging publisher with Google Cloud Pub/Sub publication after the assignment commit.
+- [ ] Preserve the documented post-commit behavior: publish failure returns `500` while the assignment persists; no outbox or publisher retry is added in this phase.
+- [ ] Implement the independent streaming-pull worker with validation, simulated notification logging, graceful shutdown, and `ack` only after successful handling.
+- [ ] `nack` invalid or failed messages for emulator redelivery and document the later GCP dead-letter/retry path.
+- [ ] Add mocked publisher/worker tests and an emulator-backed assignment-to-notification integration check.
+
+Exit gate:
+
+- [ ] A tenant-tagged assignment event is published and consumed through the local emulator.
+- [ ] Valid events are acknowledged; invalid and failed messages are observable and are not acknowledged.
+- [ ] Post-commit publication failure behavior and at-least-once duplicate-notification limitation are documented.
+- [ ] Phase close-out is recorded.
+
+---
+
+## Phase 8 — OpenTelemetry and local LGTM observability
+
+References: observability amendments to the specification and the completed Phase 7 message flow.
+
+- [ ] Add an optional Docker Compose `observability` profile running `grafana/otel-lgtm` with Grafana on port 3000 and OTLP/HTTP on port 4318.
+- [ ] Add explicit OTel SDK setup for `autoassist-api` and `autoassist-notification-worker`, configurable through standard `OTEL_*` variables.
+- [ ] Instrument FastAPI, SQLAlchemy, assignment publication, and worker processing with traces, metrics, and correlated application logs.
+- [ ] Inject W3C trace context into Pub/Sub message attributes and extract it in the worker to link assignment and notification spans.
+- [ ] Add bounded tenant-code dimensions to business metrics; exclude Firebase tokens, email, vehicle, description, and raw event payloads from telemetry.
+- [ ] Record assignment, publish, worker processing, acknowledgment/nack, and duration metrics; export application logs to Loki with trace/span correlation.
+- [ ] Keep telemetry initialization idempotent and disabled in ordinary unit tests.
+- [ ] Document local startup and Grafana verification for one trace, metrics, and correlated logs.
+
+Exit gate:
+
+- [ ] Grafana shows a single trace from assignment through worker notification.
+- [ ] Tempo, Mimir, and Loki receive the expected local signals without sensitive application data.
+- [ ] The normal development stack remains lightweight unless the observability profile is selected.
+- [ ] Phase close-out is recorded.
+
+---
+
+## Phase 9 — Hardening and project close
+
+References: Spec §§15–17, acceptance criteria in §19, technical objectives in §20, and the tenant/Pub-Sub/observability amendments.
+
+- [ ] Verify every required API and UI error path, including incomplete tenant selection and cross-tenant access.
+- [ ] Verify tenant isolation, roles, CORS, secret handling, telemetry data hygiene, and fail-closed configuration.
+- [ ] Run formatter, lint, type-check, tests, builds, migration checks, emulator integration checks, and optional CI.
+- [ ] Complete README setup, architecture, configuration, Swagger, emulator, observability, testing, and demo documentation.
+- [ ] Run the full clean-environment Argentina and Chile owner/operator demonstration, including the worker and Grafana verification.
+- [ ] Resolve or document all remaining limitations, including direct post-commit publication and at-least-once delivery.
 
 Acceptance:
 
-- [ ] AC-01 through AC-05: owner login, validation, creation, persistence, and pending view.
-- [ ] AC-06 through AC-12: operator login, role, listings, assignment, and persistence.
-- [ ] AC-13 through AC-16: publication, worker processing, notification, and acknowledgment.
+- [ ] AC-01 through AC-12: original owner/operator request and assignment behavior, scoped to a tenant.
+- [ ] AC-13 through AC-16: tenant-tagged publication, worker processing, notification, and acknowledgment.
 - [ ] AC-17 through AC-20: owner refresh, workshop visibility, role denial, and `401`.
+- [ ] Tenancy: first-login selection, Argentina/Chile isolation, global-admin correction, and no cross-tenant assignment.
+- [ ] Observability: correlated API-to-worker trace, assignment/worker metrics, and correlated logs in local LGTM.
 
 Exit gate:
 
-- [ ] Every acceptance criterion in Spec §19 passes.
-- [ ] Every mandatory technical objective in Spec §20 is represented and verified.
-- [ ] Setup and demonstration are reproducible from current documentation.
+- [ ] Every original and added acceptance criterion passes.
+- [ ] Setup and demonstration are reproducible from current documentation with optional emulator and observability profiles.
 - [ ] Final phase close-out is recorded.
 
 ---
@@ -316,8 +362,8 @@ Known limitations or follow-up:
 ### Phase 5
 
 ```text
-Implemented on: 2026-07-22
-Status: Code complete; Firebase provisioning and real-user verification pending
+Completed on: 2026-07-23
+Status: Complete
 
 Files changed:
 - frontend/src/firebase.ts and frontend/src/auth/ (Firebase initialization, Google popup, auth state, ID-token refresh, logout)
@@ -346,12 +392,10 @@ Verification commands and results:
 - pytest — pass (32 tests)
 - OpenAPI export and TypeScript contract generation — pass
 - live frontend HTTP, /api/health, and PostgreSQL health — pass
+- Firebase web and Admin SDK configuration verified locally; credentials match the configured project
+- Owner and operator Google sign-in flows verified end to end through the frontend
 
 Known limitations or follow-up:
-- Create/configure the Firebase project and enable Google Sign-In
-- Add localhost to authorized domains and configure the real VITE_FIREBASE_* values
-- Store a local Admin SDK credential outside version control and configure its path
-- Sign in the owner/operator accounts, seed their real Firebase UIDs, and verify both flows end to end
 - npm audit reports a pre-existing high-severity js-yaml advisory through the openapi-typescript development toolchain
 ```
 

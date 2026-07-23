@@ -158,8 +158,8 @@ auto-assist-lab/
 
 ## Current phase
 
-Phase 5 — Firebase authentication, code complete; live Firebase provisioning and real-user
-verification remain. See [`docs/implementation.md`](docs/implementation.md) for detailed progress.
+Phase 5 — Firebase authentication complete. Phase 6 (Pub/Sub and worker) is next.
+See [`docs/implementation.md`](docs/implementation.md) for detailed progress.
 
 ## Firebase authentication (Phase 5)
 
