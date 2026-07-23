@@ -20,7 +20,7 @@ def test_only_configured_admin_can_list_users(api_client: TestClient, seed_data:
     response = api_client.get("/api/admin/users", headers=auth_header(seed_data.admin.firebase_uid))
     assert response.status_code == 200
     assert {user["id"] for user in response.json()} == {
-        seed_data.owner.id, seed_data.other_owner.id, seed_data.operator.id, seed_data.admin.id,
+        seed_data.owner.id, seed_data.other_owner.id, seed_data.operator.id,
     }
 
 

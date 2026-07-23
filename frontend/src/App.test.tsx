@@ -126,7 +126,7 @@ describe('Phase 4 frontend', () => {
     render(<App authAdapter={adapter('admin-token')} />)
 
     expect(await screen.findByRole('heading', { name: 'User management' })).toBeInTheDocument()
-    expect(screen.getByText('Administrator')).toBeInTheDocument()
+    expect(screen.queryByText('admin@example.com')).not.toBeInTheDocument()
     expect(await screen.findByText('Operations Team')).toBeInTheDocument()
   })
 
@@ -160,15 +160,18 @@ describe('Phase 4 frontend', () => {
     vi.stubGlobal('fetch', fetchMock)
     render(<App authAdapter={adapter('admin-token')} />)
 
-    const [ownerRole] = await screen.findAllByRole('combobox')
-    if (!ownerRole) throw new Error('Expected an owner role selector')
-    fireEvent.change(ownerRole, { target: { value: 'OPERATOR' } })
+    const ownerRole = await screen.findByRole('combobox', { name: /role for pablo/i })
+    fireEvent.click(ownerRole)
+    fireEvent.click(screen.getByRole('option', { name: 'Operator' }))
     expect(await screen.findByText(/role was updated/)).toBeInTheDocument()
+    const listCalls = fetchMock.mock.calls.filter(([input, init]) => String(input).endsWith('/api/admin/users') && init?.method !== 'PATCH')
+    expect(listCalls).toHaveLength(1)
     const updateCall = fetchMock.mock.calls.find(([input, init]) => String(input).endsWith('/api/admin/users/1/role') && init?.method === 'PATCH')
     expect(JSON.parse(String(updateCall?.[1]?.body))).toEqual({ role: 'OPERATOR' })
 
     patchFails = true
-    fireEvent.change(ownerRole, { target: { value: 'OWNER' } })
+    fireEvent.click(ownerRole)
+    fireEvent.click(screen.getByRole('option', { name: 'Vehicle owner' }))
     expect(await screen.findByText('Role update failed')).toBeInTheDocument()
   })
 

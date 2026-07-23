@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from app.auth import RequireAdmin
 from app.config import settings
 from app.database import get_db
-from app.models import User
+from app.models import User, UserRole
 from app.schemas.user import UserResponse, UserRoleUpdate
 
 router = APIRouter(prefix="/admin/users", tags=["admin"])
@@ -15,7 +15,9 @@ router = APIRouter(prefix="/admin/users", tags=["admin"])
 
 @router.get("", response_model=list[UserResponse], summary="List registered users")
 def list_users(_: RequireAdmin, db: Annotated[Session, Depends(get_db)]) -> list[UserResponse]:
-    users = db.scalars(select(User).order_by(User.created_at, User.id)).all()
+    users = db.scalars(
+        select(User).where(User.role != UserRole.ADMIN).order_by(User.created_at, User.id)
+    ).all()
     return [UserResponse.model_validate(user) for user in users]
 
 
