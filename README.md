@@ -27,7 +27,7 @@ React (frontend)  ──HTTP──►  FastAPI (backend)  ──►  PostgreSQL
 | Frontend (Vite) | 5173 | React UI |
 | Backend (FastAPI) | 8000 | REST API and OpenAPI docs |
 | PostgreSQL (Docker) | 5433 | Application database (5433 avoids conflict with local PostgreSQL on 5432) |
-| Worker | — | Pub/Sub consumer (Phase 6) |
+| Worker | — | Pub/Sub consumer (Phase 7) |
 
 ## Prerequisites
 
@@ -116,7 +116,7 @@ use `npm run check:api` to fail when either generated file is stale.
 
 ## Database
 
-Apply migrations and load the three development workshops:
+Apply migrations and load the six development workshops (three per country tenant):
 
 ```powershell
 cd backend
@@ -142,7 +142,8 @@ Set the one administrator UID in `.env` before signing in with that account:
 ADMIN_FIREBASE_UID=<firebase uid from Google Sign-In>
 ```
 
-The seed script only manages workshops and is idempotent.
+The seed script only manages workshops and is idempotent. It supplies both immutable tenants,
+Argentina (`AR`) and Chile (`CL`), with usable workshop data.
 
 ## Project structure
 
@@ -150,7 +151,7 @@ The seed script only manages workshops and is idempotent.
 auto-assist-lab/
 ├── frontend/     React + TypeScript + Vite
 ├── backend/      FastAPI + SQLAlchemy
-├── worker/       Pub/Sub notification worker (Phase 6)
+├── worker/       Pub/Sub notification worker (Phase 7)
 ├── docker-compose.yml
 ├── .env.example
 └── docs/
@@ -158,7 +159,7 @@ auto-assist-lab/
 
 ## Current phase
 
-Phase 5 — Firebase authentication complete. Phase 6 (Pub/Sub and worker) is next.
+Phase 6 — Country tenancy complete. Phase 7 (Pub/Sub and worker) is next.
 See [`docs/implementation.md`](docs/implementation.md) for detailed progress.
 
 ## Firebase authentication (Phase 5)
@@ -194,6 +195,17 @@ After a role change, the affected user should refresh or sign in again before us
 dashboard. Existing owner/operator/admin records are normalized to `OWNER` by the migration; the
 configured administrator is promoted again on its next authenticated request.
 
+## Country tenancy (Phase 6)
+
+Every owner, operator, workshop, and service request belongs to exactly one country tenant:
+Argentina (`AR`) or Chile (`CL`). Existing development data migrates to Argentina. A newly
+authenticated non-administrator must choose a country once at `/select-tenant`; tenant-scoped
+API endpoints return `409` until that selection is complete. PostgreSQL composite foreign keys
+and API queries prevent cross-country request ownership and workshop assignment.
+
+The configured administrator remains global. In `/admin`, it can correct a non-admin account's
+country only while that account has not created a service request.
+
 ## Frontend
 
 The responsive React interface includes:
@@ -206,7 +218,8 @@ The responsive React interface includes:
 - `/operator` with owner/request details, search, status filtering, active workshops,
   assignment/reassignment, and per-row loading, success, and error feedback.
 - Session and PostgreSQL-role route guards for anonymous, owner, operator, and administrator navigation.
-- `/admin` user management with loading, success, and API-error feedback for role changes.
+- `/admin` user management with loading, success, and API-error feedback for role and country corrections.
+- `/select-tenant` first-login country selection, with protected owner/operator routes until complete.
 
 ## API
 
@@ -227,8 +240,11 @@ docker compose exec postgres psql -U autoassist -d autoassist -c "SELECT firebas
 |---|---|---|---|
 | GET | `/api/health` | — | Health check |
 | GET | `/api/me` | any | Current application user |
+| GET | `/api/tenants` | any | List available country tenants |
+| POST | `/api/me/tenant` | unassigned OWNER/OPERATOR | Select country once |
 | GET | `/api/admin/users` | ADMIN | List registered users |
 | PATCH | `/api/admin/users/{id}/role` | ADMIN | Set an OWNER or OPERATOR role |
+| PATCH | `/api/admin/users/{id}/tenant` | ADMIN | Correct a country before request history exists |
 | POST | `/api/service-requests` | OWNER | Create a request |
 | GET | `/api/service-requests/me` | OWNER | List own requests |
 | GET | `/api/operator/service-requests` | OPERATOR | List all requests |

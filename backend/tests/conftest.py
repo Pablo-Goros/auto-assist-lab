@@ -155,18 +155,21 @@ def seed_data(db_session: Session, monkeypatch: pytest.MonkeyPatch) -> SeedData:
         email="owner@test.example",
         name="Owner Test",
         role=UserRole.OWNER,
+        tenant_code="AR",
     )
     other_owner = User(
         firebase_uid="other-owner-test-uid",
         email="other-owner@test.example",
         name="Other Owner",
         role=UserRole.OWNER,
+        tenant_code="AR",
     )
     operator = User(
         firebase_uid="operator-test-uid",
         email="operator@test.example",
         name="Operator Test",
         role=UserRole.OPERATOR,
+        tenant_code="AR",
     )
     admin = User(
         firebase_uid="admin-test-uid",
@@ -175,8 +178,8 @@ def seed_data(db_session: Session, monkeypatch: pytest.MonkeyPatch) -> SeedData:
         role=UserRole.ADMIN,
     )
     workshops = [
-        Workshop(name="Active Workshop", specialty="BATTERY", active=True),
-        Workshop(name="Inactive Workshop", specialty="TIRE", active=False),
+        Workshop(name="Active Workshop", specialty="BATTERY", tenant_code="AR", active=True),
+        Workshop(name="Inactive Workshop", specialty="TIRE", tenant_code="AR", active=False),
     ]
 
     db_session.add_all([owner, other_owner, operator, admin, *workshops])
@@ -184,6 +187,7 @@ def seed_data(db_session: Session, monkeypatch: pytest.MonkeyPatch) -> SeedData:
 
     owner_request = ServiceRequest(
         owner_id=owner.id,
+        tenant_code="AR",
         vehicle="Honda Civic 2013",
         problem_type=ProblemType.BATTERY,
         description="No arranca",
@@ -191,6 +195,7 @@ def seed_data(db_session: Session, monkeypatch: pytest.MonkeyPatch) -> SeedData:
     )
     other_owner_request = ServiceRequest(
         owner_id=other_owner.id,
+        tenant_code="AR",
         vehicle="Toyota Corolla 2018",
         problem_type=ProblemType.TIRE,
         description="Pinchazo",

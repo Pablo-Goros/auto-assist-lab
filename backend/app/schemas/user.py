@@ -3,6 +3,7 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.models.enums import UserRole
+from app.schemas.tenant import TenantResponse
 
 
 class UserResponse(BaseModel):
@@ -13,6 +14,7 @@ class UserResponse(BaseModel):
     email: str
     name: str
     role: UserRole
+    tenant: TenantResponse | None
 
 
 class OwnerSummary(BaseModel):

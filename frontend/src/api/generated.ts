@@ -21,6 +21,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/tenants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List available country tenants */
+        get: operations["list_tenants_api_tenants_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/tenant": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Select the authenticated user's country tenant */
+        post: operations["select_tenant_api_me_tenant_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/service-requests": {
         parameters: {
             query?: never;
@@ -143,6 +177,23 @@ export interface paths {
         patch: operations["update_user_role_api_admin_users__user_id__role_patch"];
         trace?: never;
     };
+    "/api/admin/users/{user_id}/tenant": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Correct a user's country tenant */
+        patch: operations["correct_user_tenant_api_admin_users__user_id__tenant_patch"];
+        trace?: never;
+    };
     "/api/health": {
         parameters: {
             query?: never;
@@ -243,6 +294,18 @@ export interface components {
          * @enum {string}
          */
         ServiceRequestStatus: "PENDING" | "ASSIGNED";
+        /** TenantResponse */
+        TenantResponse: {
+            /** Code */
+            code: string;
+            /** Name */
+            name: string;
+        };
+        /** TenantSelection */
+        TenantSelection: {
+            /** Tenant Code */
+            tenant_code: string;
+        };
         /** UserResponse */
         UserResponse: {
             /** Id */
@@ -254,6 +317,7 @@ export interface components {
             /** Name */
             name: string;
             role: components["schemas"]["UserRole"];
+            tenant: components["schemas"]["TenantResponse"] | null;
         };
         /**
          * UserRole
@@ -337,6 +401,66 @@ export interface operations {
             };
         };
     };
+    list_tenants_api_tenants_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TenantResponse"][];
+                };
+            };
+        };
+    };
+    select_tenant_api_me_tenant_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TenantSelection"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserResponse"];
+                };
+            };
+            /** @description Tenant is already selected or the account is global */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     create_service_request_api_service_requests_post: {
         parameters: {
             query?: never;
@@ -368,6 +492,13 @@ export interface operations {
             };
             /** @description Owner role required */
             403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Country tenant selection is required */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -409,6 +540,13 @@ export interface operations {
             };
             /** @description Owner role required */
             403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Country tenant selection is required */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -502,6 +640,13 @@ export interface operations {
                 };
                 content?: never;
             };
+            /** @description Country tenant selection is required */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
             /** @description Validation Error */
             422: {
                 headers: {
@@ -586,6 +731,41 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["UserRoleUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    correct_user_tenant_api_admin_users__user_id__tenant_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TenantSelection"];
             };
         };
         responses: {

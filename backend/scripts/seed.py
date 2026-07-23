@@ -14,22 +14,27 @@ from app.models import Workshop
 
 logger = logging.getLogger(__name__)
 
-WORKSHOPS: Sequence[tuple[str, str]] = (
-    ("Baterías Palermo", "Baterías"),
-    ("Taller Norte", "Mecánica general"),
-    ("Grúas Express", "Grúas"),
+WORKSHOPS: Sequence[tuple[str, str, str]] = (
+    ("AR", "Baterías Palermo", "Baterías"),
+    ("AR", "Taller Norte", "Mecánica general"),
+    ("AR", "Grúas Express", "Grúas"),
+    ("CL", "Baterías Providencia", "Baterías"),
+    ("CL", "Taller Santiago Norte", "Mecánica general"),
+    ("CL", "Grúas Cordillera", "Grúas"),
 )
 
 
 def seed_workshops(session: Session) -> None:
-    for name, specialty in WORKSHOPS:
-        existing = session.scalar(select(Workshop).where(Workshop.name == name))
+    for tenant_code, name, specialty in WORKSHOPS:
+        existing = session.scalar(
+            select(Workshop).where(Workshop.name == name, Workshop.tenant_code == tenant_code)
+        )
         if existing is not None:
             logger.info("Workshop already exists: %s", name)
             continue
 
-        session.add(Workshop(name=name, specialty=specialty, active=True))
-        logger.info("Created workshop: %s", name)
+        session.add(Workshop(name=name, specialty=specialty, tenant_code=tenant_code, active=True))
+        logger.info("Created workshop: %s (%s)", name, tenant_code)
 
 
 def run_seed() -> None:

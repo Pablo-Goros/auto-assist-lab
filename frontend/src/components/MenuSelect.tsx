@@ -1,13 +1,13 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
 
-interface RoleSelectOption<T extends string> {
+export interface MenuSelectOption<T extends string> {
   value: T
   label: string
 }
 
-interface RoleSelectProps<T extends string> {
+interface MenuSelectProps<T extends string> {
   value: T
-  options: RoleSelectOption<T>[]
+  options: MenuSelectOption<T>[]
   onChange: (value: T) => void
   ariaLabel: string
   disabled?: boolean
@@ -15,7 +15,7 @@ interface RoleSelectProps<T extends string> {
 
 const MENU_GAP = 4
 
-export function RoleSelect<T extends string>({ value, options, onChange, ariaLabel, disabled = false }: RoleSelectProps<T>) {
+export function MenuSelect<T extends string>({ value, options, onChange, ariaLabel, disabled = false }: MenuSelectProps<T>) {
   const [open, setOpen] = useState(false)
   const [dropUp, setDropUp] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)
@@ -73,12 +73,12 @@ export function RoleSelect<T extends string>({ value, options, onChange, ariaLab
   }
 
   return (
-    <div ref={rootRef} className={['role-select', open ? 'role-select--open' : '', dropUp ? 'role-select--drop-up' : ''].filter(Boolean).join(' ')}>
+    <div ref={rootRef} className={['menu-select', open ? 'menu-select--open' : '', dropUp ? 'menu-select--drop-up' : ''].filter(Boolean).join(' ')}>
       <button
         ref={triggerRef}
         type="button"
         role="combobox"
-        className="role-select__trigger"
+        className="menu-select__trigger"
         aria-label={ariaLabel}
         aria-expanded={open}
         aria-controls={listboxId}
@@ -87,19 +87,19 @@ export function RoleSelect<T extends string>({ value, options, onChange, ariaLab
         onClick={() => setOpen((current) => !current)}
       >
         <span>{selected?.label ?? value}</span>
-        <svg className="role-select__chevron" viewBox="0 0 20 20" aria-hidden="true">
+        <svg className="menu-select__chevron" viewBox="0 0 20 20" aria-hidden="true">
           <path d="M5.5 7.5 10 12l4.5-4.5" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.75" />
         </svg>
       </button>
       {open && (
-        <ul ref={menuRef} className="role-select__menu" id={listboxId} role="listbox" aria-label={ariaLabel}>
+        <ul ref={menuRef} className="menu-select__menu" id={listboxId} role="listbox" aria-label={ariaLabel}>
           {options.map((option) => (
             <li key={option.value} role="presentation">
               <button
                 type="button"
                 role="option"
                 aria-selected={option.value === value}
-                className={['role-select__option', option.value === value ? 'role-select__option--selected' : ''].filter(Boolean).join(' ')}
+                className={['menu-select__option', option.value === value ? 'menu-select__option--selected' : ''].filter(Boolean).join(' ')}
                 onClick={() => choose(option.value)}
               >
                 {option.label}

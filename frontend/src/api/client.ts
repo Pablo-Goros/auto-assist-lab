@@ -2,6 +2,8 @@ import type {
   CreateServiceRequestInput,
   OperatorServiceRequest,
   ServiceRequest,
+  Tenant,
+  TenantSelection,
   User,
   UserRoleUpdate,
   Workshop,
@@ -77,6 +79,17 @@ export const api = {
 
   updateUserRole: (token: string, userId: number, input: UserRoleUpdate): Promise<User> =>
     request<User>(`/admin/users/${userId}/role`, token, {
+      method: 'PATCH',
+      body: JSON.stringify(input),
+    }),
+
+  getTenants: (token: string): Promise<Tenant[]> => request<Tenant[]>('/tenants', token),
+
+  selectTenant: (token: string, input: TenantSelection): Promise<User> =>
+    request<User>('/me/tenant', token, { method: 'POST', body: JSON.stringify(input) }),
+
+  correctUserTenant: (token: string, userId: number, input: TenantSelection): Promise<User> =>
+    request<User>(`/admin/users/${userId}/tenant`, token, {
       method: 'PATCH',
       body: JSON.stringify(input),
     }),

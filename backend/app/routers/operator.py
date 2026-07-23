@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
 
-from app.auth import RequireOperator
+from app.auth import RequireTenantOperator
 from app.database import get_db
 from app.models import ServiceRequest, Workshop
 from app.schemas.service_request import (
@@ -25,10 +25,11 @@ router = APIRouter(prefix="/operator", tags=["operator"])
     responses={
         401: {"description": "Missing or invalid authentication token"},
         403: {"description": "Operator role required"},
+        409: {"description": "Country tenant selection is required"},
     },
 )
 def list_operator_service_requests(
-    _: RequireOperator,
+    current_user: RequireTenantOperator,
     db: Annotated[Session, Depends(get_db)],
 ) -> list[OperatorServiceRequestResponse]:
     requests = db.scalars(
@@ -37,6 +38,7 @@ def list_operator_service_requests(
             joinedload(ServiceRequest.owner),
             joinedload(ServiceRequest.assigned_workshop),
         )
+        .where(ServiceRequest.tenant_code == current_user.tenant_code)
         .order_by(ServiceRequest.created_at.desc())
     ).all()
     return [OperatorServiceRequestResponse.model_validate(request) for request in requests]
@@ -56,6 +58,7 @@ def list_operator_service_requests(
         400: {"description": "Workshop is inactive"},
         401: {"description": "Missing or invalid authentication token"},
         403: {"description": "Operator role required"},
+        409: {"description": "Country tenant selection is required"},
         404: {"description": "Service request or workshop not found"},
         500: {"description": "Assignment persisted but event publication failed"},
     },
@@ -63,7 +66,7 @@ def list_operator_service_requests(
 def assign_service_request(
     request_id: int,
     payload: AssignWorkshopRequest,
-    _: RequireOperator,
+    current_user: RequireTenantOperator,
     db: Annotated[Session, Depends(get_db)],
     publisher: Annotated[EventPublisher, Depends(get_event_publisher)],
 ) -> ServiceRequestResponse:
@@ -72,6 +75,7 @@ def assign_service_request(
             db,
             request_id=request_id,
             workshop_id=payload.workshop_id,
+            tenant_code=current_user.tenant_code,
             publisher=publisher,
         )
     except AssignmentError as exc:

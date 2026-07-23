@@ -21,7 +21,7 @@ approval before starting a phase or making a significant scope change.
 - [x] Implementation tracker created.
 - [-] Application implementation started.
 
-Overall phase: **Phase 5 complete; Phase 6 (country tenancy) is next**.
+Overall phase: **Phase 6 complete; Phase 7 (local Pub/Sub and notification worker) is next**.
 
 ---
 
@@ -135,21 +135,21 @@ Exit gate:
 
 References: the tenancy amendments to Spec §§7–10, API configuration in §14, and backend/frontend cases in §17.
 
-- [ ] Add the `tenants` model and seed exactly `AR` (Argentina) and `CL` (Chile).
-- [ ] Migrate existing users, workshops, and service requests to Argentina; make workshop and request tenancy mandatory.
-- [ ] Enforce tenant-safe owner and workshop relationships with database constraints and tenant-scoped queries.
-- [ ] Add one-time tenant selection after first Firebase login; return `409` from tenant-scoped endpoints until selection completes.
-- [ ] Keep the configured administrator global and add tenant correction for accounts without service-request history.
-- [ ] Extend `/api/me`, admin user responses, OpenAPI, generated frontend types, and the admin UI with tenant information.
-- [ ] Add the tenant-selection screen and prevent owner/operator cross-tenant listings and assignments.
-- [ ] Add migration, API, and frontend tests for selection, isolation, corrections, and cross-tenant not-found behavior.
+- [x] Add the `tenants` model and seed exactly `AR` (Argentina) and `CL` (Chile).
+- [x] Migrate existing users, workshops, and service requests to Argentina; make workshop and request tenancy mandatory.
+- [x] Enforce tenant-safe owner and workshop relationships with database constraints and tenant-scoped queries.
+- [x] Add one-time tenant selection after first Firebase login; return `409` from tenant-scoped endpoints until selection completes.
+- [x] Keep the configured administrator global and add tenant correction for accounts without service-request history.
+- [x] Extend `/api/me`, admin user responses, OpenAPI, generated frontend types, and the admin UI with tenant information.
+- [x] Add the tenant-selection screen and prevent owner/operator cross-tenant listings and assignments.
+- [x] Add migration, API, and frontend tests for selection, isolation, corrections, and cross-tenant not-found behavior.
 
 Exit gate:
 
-- [ ] A user belongs to exactly one country tenant after onboarding; the administrator remains global.
-- [ ] Owners, operators, workshops, and assignments cannot cross tenant boundaries.
-- [ ] Existing development data migrates reproducibly to Argentina and both countries have usable workshop seed data.
-- [ ] Phase close-out is recorded.
+- [x] A user belongs to exactly one country tenant after onboarding; the administrator remains global.
+- [x] Owners, operators, workshops, and assignments cannot cross tenant boundaries.
+- [x] Existing development data migrates reproducibly to Argentina and both countries have usable workshop seed data.
+- [x] Phase close-out is recorded.
 
 ---
 
@@ -397,6 +397,35 @@ Verification commands and results:
 
 Known limitations or follow-up:
 - npm audit reports a pre-existing high-severity js-yaml advisory through the openapi-typescript development toolchain
+```
+
+### Phase 6
+
+```text
+Completed on: 2026-07-23
+Status: Complete
+
+Files changed:
+- backend tenancy model, migration, scoped dependencies/routes, seed workflow, and API tests
+- frontend tenant onboarding, admin country correction, generated OpenAPI types, and UI tests
+- README.md, openapi.json, docs/implementation.md
+
+Decisions:
+- `AR` and `CL` are immutable tenant records seeded by the tenancy migration.
+- Existing development records migrate to `AR`; newly authenticated non-admin accounts choose once before tenant-scoped work.
+- Composite PostgreSQL foreign keys bind request owners and assigned workshops to the request tenant.
+- The configured administrator is global and may correct a non-admin tenant only before service-request history exists.
+
+Tests added or updated:
+- backend/tests/test_tenancy.py plus migration, model, API, seed, and admin fixtures
+- frontend/src/App.test.tsx tenant-selection coverage
+
+Verification commands and results:
+- backend: .venv\Scripts\python.exe -m pytest -q — pass (42 tests)
+- frontend: npm run generate:api, npm run type-check, npm test, npm run lint, npm run build — pass (13 frontend tests)
+
+Known limitations or follow-up:
+- Tenant-tagged Pub/Sub event contracts and worker processing begin in Phase 7.
 ```
 
 Copy this block below the completed phase:

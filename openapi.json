@@ -35,6 +35,85 @@
         ]
       }
     },
+    "/api/tenants": {
+      "get": {
+        "tags": [
+          "tenants"
+        ],
+        "summary": "List available country tenants",
+        "operationId": "list_tenants_api_tenants_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/TenantResponse"
+                  },
+                  "type": "array",
+                  "title": "Response List Tenants Api Tenants Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/me/tenant": {
+      "post": {
+        "tags": [
+          "tenants"
+        ],
+        "summary": "Select the authenticated user's country tenant",
+        "operationId": "select_tenant_api_me_tenant_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TenantSelection"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Tenant is already selected or the account is global"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
     "/api/service-requests": {
       "post": {
         "tags": [
@@ -68,6 +147,9 @@
           },
           "403": {
             "description": "Owner role required"
+          },
+          "409": {
+            "description": "Country tenant selection is required"
           },
           "422": {
             "description": "Invalid request body"
@@ -107,6 +189,9 @@
           },
           "403": {
             "description": "Owner role required"
+          },
+          "409": {
+            "description": "Country tenant selection is required"
           }
         },
         "security": [
@@ -143,6 +228,9 @@
           },
           "403": {
             "description": "Operator role required"
+          },
+          "409": {
+            "description": "Country tenant selection is required"
           }
         },
         "security": [
@@ -206,6 +294,9 @@
           "403": {
             "description": "Operator role required"
           },
+          "409": {
+            "description": "Country tenant selection is required"
+          },
           "404": {
             "description": "Service request or workshop not found"
           },
@@ -252,6 +343,9 @@
           },
           "403": {
             "description": "Operator role required"
+          },
+          "409": {
+            "description": "Country tenant selection is required"
           }
         },
         "security": [
@@ -334,6 +428,69 @@
                 }
               }
             }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/users/{user_id}/tenant": {
+      "patch": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Correct a user's country tenant",
+        "operationId": "correct_user_tenant_api_admin_users__user_id__tenant_patch",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "User Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TenantSelection"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found"
+          },
+          "409": {
+            "description": "Administrator account or service-request history prevents correction"
           },
           "422": {
             "description": "Validation Error",
@@ -516,6 +673,7 @@
           },
           "description": {
             "type": "string",
+            "maxLength": 1000,
             "minLength": 1,
             "title": "Description"
           }
@@ -597,6 +755,40 @@
         ],
         "title": "ServiceRequestStatus"
       },
+      "TenantResponse": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "name"
+        ],
+        "title": "TenantResponse"
+      },
+      "TenantSelection": {
+        "properties": {
+          "tenant_code": {
+            "type": "string",
+            "maxLength": 2,
+            "minLength": 2,
+            "pattern": "^[A-Z]{2}$",
+            "title": "Tenant Code"
+          }
+        },
+        "type": "object",
+        "required": [
+          "tenant_code"
+        ],
+        "title": "TenantSelection"
+      },
       "UserResponse": {
         "properties": {
           "id": {
@@ -617,6 +809,16 @@
           },
           "role": {
             "$ref": "#/components/schemas/UserRole"
+          },
+          "tenant": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TenantResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -625,7 +827,8 @@
           "firebase_uid",
           "email",
           "name",
-          "role"
+          "role",
+          "tenant"
         ],
         "title": "UserResponse"
       },

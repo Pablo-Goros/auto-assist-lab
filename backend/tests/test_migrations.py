@@ -8,7 +8,9 @@ from tests.conftest import get_alembic_config
 def test_initial_migration_creates_expected_tables(migrated_test_db) -> None:
     inspector = inspect(migrated_test_db)
     table_names = set(inspector.get_table_names())
-    assert {"users", "workshops", "service_requests"}.issubset(table_names)
+    assert {"tenants", "users", "workshops", "service_requests"}.issubset(table_names)
+    with migrated_test_db.connect() as connection:
+        assert connection.execute(text("SELECT code FROM tenants ORDER BY code")).scalars().all() == ["AR", "CL"]
     with migrated_test_db.connect() as connection:
         roles = connection.execute(
             text("SELECT enumlabel FROM pg_enum JOIN pg_type ON pg_enum.enumtypid = pg_type.oid WHERE typname = 'user_role'")
@@ -52,11 +54,11 @@ def test_role_normalization_migration_converts_legacy_operator_and_admin(test_da
 
     command.upgrade(alembic_config, "head")
     with engine.connect() as connection:
-        roles = connection.execute(text("SELECT firebase_uid, role::text FROM users ORDER BY firebase_uid")).all()
-    assert roles == [
-        ("legacy-admin", "OWNER"),
-        ("legacy-operator", "OWNER"),
-        ("legacy-owner", "OWNER"),
+        users = connection.execute(text("SELECT firebase_uid, role::text, tenant_code FROM users ORDER BY firebase_uid")).all()
+    assert users == [
+        ("legacy-admin", "OWNER", "AR"),
+        ("legacy-operator", "OWNER", "AR"),
+        ("legacy-owner", "OWNER", "AR"),
     ]
 
     command.downgrade(alembic_config, "base")

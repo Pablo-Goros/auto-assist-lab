@@ -111,7 +111,7 @@ export function AuthProvider({ children, adapter = firebaseAuthAdapter }: AuthPr
   )
 
   const value = useMemo<AuthContextValue>(
-    () => ({ status, token, user, error, signIn, signOut: clearSession }),
+    () => ({ status, token, user, error, signIn, signOut: clearSession, replaceUser: setUser }),
     [status, token, user, error, signIn, clearSession],
   )
 

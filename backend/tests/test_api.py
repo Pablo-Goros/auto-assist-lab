@@ -30,6 +30,7 @@ def test_me_returns_current_user(api_client: TestClient, seed_data: SeedData) ->
         "email": seed_data.owner.email,
         "name": seed_data.owner.name,
         "role": "OWNER",
+        "tenant": {"code": "AR", "name": "Argentina"},
     }
 
 
@@ -38,6 +39,7 @@ def test_me_returns_admin_role(api_client: TestClient, seed_data: SeedData) -> N
 
     assert response.status_code == 200
     assert response.json()["role"] == "ADMIN"
+    assert response.json()["tenant"] is None
 
 
 def test_admin_has_no_owner_or_operator_permissions(
@@ -230,7 +232,7 @@ def test_reassignment_updates_workshop_and_publishes_again(
     event_publisher,
 ) -> None:
     active_workshop = seed_data.workshops[0]
-    second_workshop = Workshop(name="Second Workshop", specialty="TOWING", active=True)
+    second_workshop = Workshop(name="Second Workshop", specialty="TOWING", tenant_code="AR", active=True)
     db_session.add(second_workshop)
     db_session.commit()
     db_session.refresh(second_workshop)

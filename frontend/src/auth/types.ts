@@ -16,6 +16,7 @@ export interface AuthContextValue {
   token: string | null
   user: User | null
   error: string | null
+  replaceUser(user: User): void
   signIn(): Promise<void>
   signOut(): Promise<void>
 }

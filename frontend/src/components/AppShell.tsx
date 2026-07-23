@@ -85,6 +85,7 @@ export function AppShell({ children }: AppShellProps) {
                   </div>
                   <dl className="profile-popover__details">
                     <div><dt>Email</dt><dd>{(profile ?? user).email}</dd></div>
+                    <div><dt>Country</dt><dd>{(profile ?? user).tenant?.name ?? 'Global administrator'}</dd></div>
                     <div><dt>Account ID</dt><dd>#{(profile ?? user).id}</dd></div>
                   </dl>
                 </>

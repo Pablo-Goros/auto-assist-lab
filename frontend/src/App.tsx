@@ -10,12 +10,14 @@ import { AdminPage } from './pages/AdminPage'
 import { NewRequestPage } from './pages/NewRequestPage'
 import { OperatorPage } from './pages/OperatorPage'
 import { OwnerRequestsPage } from './pages/OwnerRequestsPage'
+import { TenantSelectionPage } from './pages/TenantSelectionPage'
 import './App.css'
 
 function HomeRedirect() {
   const { status, user } = useAuth()
   if (status === 'initializing') return <FullPageLoader label="Loading AutoAssist" />
   if (!user) return <Navigate to="/login" replace />
+  if (user.role !== 'ADMIN' && !user.tenant) return <Navigate to="/select-tenant" replace />
   return <Navigate to={dashboardPathForRole(user.role)} replace />
 }
 
@@ -29,6 +31,7 @@ function App({ authAdapter }: AppProps) {
       <AuthProvider adapter={authAdapter}>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/select-tenant" element={<TenantSelectionPage />} />
           <Route element={<ProtectedRoute role="OWNER" />}>
             <Route path="/requests" element={<OwnerRequestsPage />} />
             <Route path="/requests/new" element={<NewRequestPage />} />

@@ -5,6 +5,7 @@ import type { OperatorServiceRequest, ServiceRequestStatus, Workshop } from '../
 import { useAuth } from '../auth/useAuth'
 import { AppShell } from '../components/AppShell'
 import { ListSkeleton, Notice } from '../components/Feedback'
+import { FormSelect } from '../components/FormSelect'
 import { CalendarIcon, CheckIcon, ToolIcon } from '../components/Icons'
 import { StatusBadge } from '../components/StatusBadge'
 
@@ -86,7 +87,7 @@ export function OperatorPage() {
       <section className="data-card operator-card">
         <div className="data-card__header operator-card__toolbar">
           <div><h2>All service requests</h2><p>{filteredRequests.length} results across all owners.</p></div>
-          <label className="filter-select"><span>Status</span><select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as typeof statusFilter)}><option value="ALL">All statuses</option><option value="PENDING">Pending</option><option value="ASSIGNED">Assigned</option></select></label>
+          <label className="filter-select"><span>Status</span><FormSelect value={statusFilter} onValueChange={(value) => setStatusFilter(value as typeof statusFilter)} options={[{ value: 'ALL', label: 'All statuses' }, { value: 'PENDING', label: 'Pending' }, { value: 'ASSIGNED', label: 'Assigned' }]} /></label>
         </div>
 
         {loading ? (
@@ -113,10 +114,15 @@ export function OperatorPage() {
                   <div className="assignment-cell">
                     <small>Workshop assignment</small>
                     <div className="assignment-controls">
-                      <select aria-label={`Workshop for request ${request.id}`} value={selected[request.id] ?? ''} disabled={isAssigning} onChange={(event) => setSelected((current) => ({ ...current, [request.id]: Number(event.target.value) }))}>
+                      <FormSelect
+                        aria-label={`Workshop for request ${request.id}`}
+                        value={selected[request.id] ? String(selected[request.id]) : ''}
+                        disabled={isAssigning}
+                        onValueChange={(value) => setSelected((current) => ({ ...current, [request.id]: Number(value) }))}
+                      >
                         <option value="">Select workshop</option>
                         {workshops.map((workshop) => <option value={workshop.id} key={workshop.id}>{workshop.name} · {workshop.specialty}</option>)}
-                      </select>
+                      </FormSelect>
                       <button className="button button--small" type="button" disabled={!hasSelection || isAssigning || isCurrentSelection} onClick={() => void assignWorkshop(request.id)}>
                         {isAssigning && <span className="spinner" />}
                         {isAssigning ? 'Assigning…' : request.status === 'ASSIGNED' ? 'Reassign' : 'Assign'}

@@ -64,6 +64,7 @@ def get_current_user(
                 if identity.firebase_uid == configured_admin_uid and configured_admin_uid
                 else UserRole.OWNER
             ),
+            tenant_code=None,
         )
         db.add(user)
     else:
@@ -72,6 +73,7 @@ def get_current_user(
         # administrator changes them. Existing profile details are retained.
         if identity.firebase_uid == configured_admin_uid and configured_admin_uid:
             user.role = UserRole.ADMIN
+            user.tenant_code = None
         elif user.role == UserRole.ADMIN:
             user.role = UserRole.OWNER
 
@@ -93,7 +95,21 @@ def require_role(required_role: UserRole) -> Callable[..., User]:
     return dependency
 
 
+def require_tenant_role(required_role: UserRole) -> Callable[..., User]:
+    def dependency(current_user: Annotated[User, Depends(require_role(required_role))]) -> User:
+        if current_user.tenant_code is None:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Select a country tenant before using this endpoint",
+            )
+        return current_user
+
+    return dependency
+
+
 RequireOwner = Annotated[User, Depends(require_role(UserRole.OWNER))]
 RequireOperator = Annotated[User, Depends(require_role(UserRole.OPERATOR))]
 RequireAdmin = Annotated[User, Depends(require_role(UserRole.ADMIN))]
+RequireTenantOwner = Annotated[User, Depends(require_tenant_role(UserRole.OWNER))]
+RequireTenantOperator = Annotated[User, Depends(require_tenant_role(UserRole.OPERATOR))]
 CurrentUser = Annotated[User, Depends(get_current_user)]

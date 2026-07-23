@@ -13,6 +13,7 @@ export function ProtectedRoute({ role }: ProtectedRouteProps) {
 
   if (status === 'initializing') return <FullPageLoader label="Restoring your session" />
   if (status === 'anonymous' || !user) return <Navigate to="/login" replace />
+  if (user.role !== 'ADMIN' && !user.tenant) return <Navigate to="/select-tenant" replace />
   if (user.role !== role) {
     return <Navigate to={dashboardPathForRole(user.role)} replace />
   }

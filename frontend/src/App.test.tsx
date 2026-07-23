@@ -9,6 +9,7 @@ const owner = {
   email: 'pablo@example.com',
   name: 'Pablo Pérez',
   role: 'OWNER',
+  tenant: { code: 'AR', name: 'Argentina' },
 } as const
 
 const operator = {
@@ -17,6 +18,7 @@ const operator = {
   email: 'operator@example.com',
   name: 'Operations Team',
   role: 'OPERATOR',
+  tenant: { code: 'AR', name: 'Argentina' },
 } as const
 
 const admin = {
@@ -25,6 +27,7 @@ const admin = {
   email: 'admin@example.com',
   name: 'Admin Team',
   role: 'ADMIN',
+  tenant: null,
 } as const
 
 const ownerRequest = {
@@ -113,6 +116,31 @@ describe('Phase 4 frontend', () => {
 
     expect(await screen.findByRole('heading', { name: 'Hi, Pablo' })).toBeInTheDocument()
     expect(window.location.pathname).toBe('/requests')
+  })
+
+  it('requires a new owner to choose a country before opening the dashboard', async () => {
+    const unassignedOwner = { ...owner, tenant: null }
+    const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input)
+      if (url.endsWith('/api/me')) return jsonResponse(unassignedOwner)
+      if (url.endsWith('/api/tenants')) return jsonResponse([
+        { code: 'AR', name: 'Argentina' },
+        { code: 'CL', name: 'Chile' },
+      ])
+      if (url.endsWith('/api/me/tenant') && init?.method === 'POST') {
+        return jsonResponse({ ...owner, tenant: { code: 'CL', name: 'Chile' } })
+      }
+      if (url.endsWith('/api/service-requests/me')) return jsonResponse([])
+      return jsonResponse({}, 404)
+    })
+    vi.stubGlobal('fetch', fetchMock)
+    render(<App authAdapter={adapter('owner-token')} />)
+
+    expect(await screen.findByRole('heading', { name: 'Choose your country' })).toBeInTheDocument()
+    fireEvent.click(await screen.findByRole('button', { name: /Chile CL/i }))
+    expect(await screen.findByRole('heading', { name: 'Hi, Pablo' })).toBeInTheDocument()
+    const selectionCall = fetchMock.mock.calls.find(([input, init]) => String(input).endsWith('/api/me/tenant') && init?.method === 'POST')
+    expect(JSON.parse(String(selectionCall?.[1]?.body))).toEqual({ tenant_code: 'CL' })
   })
 
   it('protects the admin route and renders registered users', async () => {

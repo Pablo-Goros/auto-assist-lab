@@ -21,6 +21,7 @@ def assign_workshop_to_request(
     *,
     request_id: int,
     workshop_id: int,
+    tenant_code: str,
     publisher: EventPublisher,
 ) -> ServiceRequest:
     """Assign an active workshop to a service request and publish after commit.
@@ -32,12 +33,12 @@ def assign_workshop_to_request(
     service_request = db.scalar(
         select(ServiceRequest)
         .options(joinedload(ServiceRequest.assigned_workshop))
-        .where(ServiceRequest.id == request_id)
+        .where(ServiceRequest.id == request_id, ServiceRequest.tenant_code == tenant_code)
     )
     if service_request is None:
         raise AssignmentError(status.HTTP_404_NOT_FOUND, "Service request not found")
 
-    workshop = db.get(Workshop, workshop_id)
+    workshop = db.scalar(select(Workshop).where(Workshop.id == workshop_id, Workshop.tenant_code == tenant_code))
     if workshop is None:
         raise AssignmentError(status.HTTP_404_NOT_FOUND, "Workshop not found")
     if not workshop.active:
@@ -54,7 +55,7 @@ def assign_workshop_to_request(
     loaded_request = db.scalar(
         select(ServiceRequest)
         .options(joinedload(ServiceRequest.assigned_workshop))
-        .where(ServiceRequest.id == request_id)
+        .where(ServiceRequest.id == request_id, ServiceRequest.tenant_code == tenant_code)
     )
     if loaded_request is None:
         raise AssignmentError(status.HTTP_500_INTERNAL_SERVER_ERROR, "Failed to load assigned request")
