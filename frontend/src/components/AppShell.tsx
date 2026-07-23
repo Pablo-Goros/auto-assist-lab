@@ -1,4 +1,4 @@
-import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { api } from '../api/client'
@@ -7,19 +7,11 @@ import type { User } from '../api/types'
 import { useAuth } from '../auth/useAuth'
 import { dashboardPathForRole } from '../auth/roleRouting'
 import { Brand } from './Brand'
-import { HomeIcon, LogOutIcon, PlusIcon } from './Icons'
+import { HomeIcon, LogOutIcon, PlusIcon, UserIcon } from './Icons'
+import { SidebarActionButton, SidebarNavButton } from './SidebarButton'
 
 interface AppShellProps {
   children: ReactNode
-}
-
-function initials(name: string): string {
-  return name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase())
-    .join('')
 }
 
 export function AppShell({ children }: AppShellProps) {
@@ -77,10 +69,7 @@ export function AppShell({ children }: AppShellProps) {
       <aside className="sidebar">
         <Brand />
         <nav className="sidebar__nav" aria-label="Main navigation">
-          <NavLink to={dashboardPath} end className={({ isActive }) => `nav-link ${isActive ? 'nav-link--active' : ''}`}>
-            <HomeIcon />
-            <span>Dashboard</span>
-          </NavLink>
+          <SidebarNavButton to={dashboardPath} end icon={<HomeIcon />} label="Dashboard" />
         </nav>
         <div className="sidebar__account" ref={profileRef}>
           {profileOpen && (
@@ -92,7 +81,6 @@ export function AppShell({ children }: AppShellProps) {
               ) : (
                 <>
                   <div className="profile-popover__header">
-                    <span className="avatar avatar--large">{initials((profile ?? user).name)}</span>
                     <div><strong>{(profile ?? user).name}</strong><span>{userRoleLabels[(profile ?? user).role]}</span></div>
                   </div>
                   <dl className="profile-popover__details">
@@ -103,13 +91,22 @@ export function AppShell({ children }: AppShellProps) {
               )}
             </section>
           )}
-          <button className="profile-chip profile-chip--button" type="button" onClick={() => void toggleProfile()} aria-expanded={profileOpen} aria-label="Open profile">
-            <span className="avatar">{initials(user.name)}</span>
-            <span className="profile-chip__details"><strong>{user.name}</strong><small>{userRoleLabels[user.role]}</small></span>
-          </button>
-          <button className="sidebar__logout" type="button" onClick={() => void handleSignOut()} aria-label="Sign out">
-            <LogOutIcon /><span>Sign out</span>
-          </button>
+          <SidebarActionButton
+            icon={<UserIcon />}
+            label={user.name}
+            subtitle={userRoleLabels[user.role]}
+            expanded={profileOpen}
+            onClick={() => void toggleProfile()}
+            aria-expanded={profileOpen}
+            aria-label="Open profile"
+          />
+          <SidebarActionButton
+            icon={<LogOutIcon />}
+            label="Sign out"
+            variant="danger"
+            onClick={() => void handleSignOut()}
+            aria-label="Sign out"
+          />
         </div>
       </aside>
 

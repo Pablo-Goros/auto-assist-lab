@@ -85,6 +85,23 @@ def test_operator_cannot_create_service_request(api_client: TestClient, seed_dat
     assert response.json()["detail"] == "Insufficient permissions"
 
 
+def test_owner_cannot_create_service_request_with_overlong_description(
+    api_client: TestClient,
+    seed_data: SeedData,
+) -> None:
+    response = api_client.post(
+        "/api/service-requests",
+        headers=auth_header(seed_data.owner.firebase_uid),
+        json={
+            "vehicle": "Ford Focus 2015",
+            "problem_type": "MECHANICAL",
+            "description": "x" * 1001,
+        },
+    )
+
+    assert response.status_code == 422
+
+
 def test_owner_lists_only_own_requests(api_client: TestClient, seed_data: SeedData) -> None:
     response = api_client.get(
         "/api/service-requests/me",

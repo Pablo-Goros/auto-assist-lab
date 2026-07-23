@@ -26,6 +26,10 @@ export function LogOutIcon(props: IconProps) {
   return <IconBase {...props}><path d="M10 17l5-5-5-5M15 12H3" /><path d="M14 3h5a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-5" /></IconBase>
 }
 
+export function UserIcon(props: IconProps) {
+  return <IconBase {...props}><circle cx="12" cy="8" r="4" /><path d="M5 20c0-3.3 3.1-6 7-6s7 2.7 7 6" /></IconBase>
+}
+
 export function ArrowLeftIcon(props: IconProps) {
   return <IconBase {...props}><path d="m15 18-6-6 6-6" /></IconBase>
 }

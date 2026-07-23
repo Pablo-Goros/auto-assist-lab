@@ -11,6 +11,8 @@ import { ArrowLeftIcon, CarIcon, ToolIcon } from '../components/Icons'
 const problemOptions = (Object.entries(problemMetadata) as [ProblemType, (typeof problemMetadata)[ProblemType]][])
   .map(([value, metadata]) => ({ value, ...metadata }))
 
+const descriptionMaxLength = 1000
+
 interface FormErrors {
   vehicle?: string
   description?: string
@@ -30,6 +32,9 @@ export function NewRequestPage() {
     const nextErrors: FormErrors = {}
     if (!vehicle.trim()) nextErrors.vehicle = 'Enter the vehicle make, model, and year.'
     if (!description.trim()) nextErrors.description = 'Tell us what happened so the workshop can prepare.'
+    else if (description.length > descriptionMaxLength) {
+      nextErrors.description = `Keep the description to ${descriptionMaxLength} characters or fewer.`
+    }
     return nextErrors
   }
 
@@ -54,16 +59,17 @@ export function NewRequestPage() {
 
   return (
     <AppShell>
-      <div className="page-heading page-heading--compact">
-        <div>
-          <Link className="back-link" to="/requests"><ArrowLeftIcon />Back to requests</Link>
-          <span className="eyebrow">Get roadside help</span>
-          <h1>New service request</h1>
-          <p>Share a few details and our team will connect you with the right workshop.</p>
+      <div className="request-page">
+        <div className="page-heading page-heading--compact">
+          <div>
+            <Link className="back-link" to="/requests"><ArrowLeftIcon />Back to requests</Link>
+            <span className="eyebrow">Get roadside help</span>
+            <h1>New service request</h1>
+            <p>Share a few details and our team will connect you with the right workshop.</p>
+          </div>
         </div>
-      </div>
 
-      <form className="request-form" onSubmit={(event) => void handleSubmit(event)} noValidate>
+        <form className="request-form" onSubmit={(event) => void handleSubmit(event)} noValidate>
         <section className="form-card">
           <div className="form-card__title"><span><CarIcon /></span><div><h2>Vehicle details</h2><p>Which vehicle needs assistance?</p></div></div>
           <label className="field">
@@ -87,8 +93,8 @@ export function NewRequestPage() {
           </fieldset>
           <label className="field">
             <span>Description <b>*</b></span>
-            <textarea value={description} onChange={(event) => setDescription(event.target.value)} aria-invalid={Boolean(errors.description)} placeholder="Describe what you noticed, where the vehicle is, and anything else that may help…" rows={5} />
-            <span className="field-meta">{description.length} characters</span>
+            <textarea value={description} onChange={(event) => setDescription(event.target.value)} aria-invalid={Boolean(errors.description)} placeholder="Describe what you noticed, where the vehicle is, and anything else that may help…" rows={5} maxLength={descriptionMaxLength} />
+            <span className={`field-meta${description.length >= descriptionMaxLength ? ' field-meta--limit' : ''}`}>{description.length} / {descriptionMaxLength}</span>
             {errors.description && <small className="field-error">{errors.description}</small>}
           </label>
         </section>
@@ -101,7 +107,8 @@ export function NewRequestPage() {
             {submitting ? 'Submitting request…' : 'Submit request'}
           </button>
         </div>
-      </form>
+        </form>
+      </div>
     </AppShell>
   )
 }

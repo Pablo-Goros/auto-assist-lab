@@ -10,7 +10,7 @@ from app.schemas.workshop import WorkshopSummary
 class ServiceRequestCreate(BaseModel):
     vehicle: str = Field(min_length=1, max_length=255)
     problem_type: ProblemType
-    description: str = Field(min_length=1)
+    description: str = Field(min_length=1, max_length=1000)
 
 
 class ServiceRequestResponse(BaseModel):

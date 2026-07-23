@@ -6,7 +6,7 @@ import type { ServiceRequest } from '../api/types'
 import { useAuth } from '../auth/useAuth'
 import { AppShell } from '../components/AppShell'
 import { ListSkeleton, Notice } from '../components/Feedback'
-import { ArrowRightIcon, CalendarIcon, CarIcon, ToolIcon } from '../components/Icons'
+import { CalendarIcon, CarIcon, ToolIcon } from '../components/Icons'
 import { StatusBadge } from '../components/StatusBadge'
 
 export function OwnerRequestsPage() {
@@ -57,8 +57,8 @@ export function OwnerRequestsPage() {
       {error && <Notice tone="error">{error}</Notice>}
 
       <section className="data-card">
-        <div className="data-card__header">
-          <div><h2>My service requests</h2><p>Updates from your most recent requests.</p></div>
+        <div className="data-card__header owner-request-grid">
+          <h2 className="data-card__title">My service requests</h2>
           {!loading && <span className="result-count">{requests.length} {requests.length === 1 ? 'request' : 'requests'}</span>}
         </div>
 
@@ -70,14 +70,14 @@ export function OwnerRequestsPage() {
           <div className="empty-state"><CarIcon /><h3>No service requests yet</h3><p>Create your first request and we’ll help you find a workshop.</p><Link className="button button--primary" to="/requests/new">Create request</Link></div>
         ) : (
           <div className="request-list owner-request-list">
-            <div className="request-list__head owner-request-grid"><span>Request</span><span>Vehicle</span><span>Issue</span><span>Status</span><span /></div>
+            <div className="request-list__head owner-request-grid"><span>Request</span><span>Vehicle</span><span>Issue</span><span>Status</span><span>Workshop</span></div>
             {requests.map((request) => (
               <article className="request-row owner-request-grid" key={request.id}>
-                <div className="request-id"><small>Request</small><strong>REQ-{String(request.id).padStart(4, '0')}</strong></div>
+                <div className="request-id"><small>Request</small><strong>{String(request.id).padStart(4, '0')}</strong></div>
                 <div><small>Vehicle</small><strong>{request.vehicle}</strong></div>
                 <div><small>Issue</small><strong>{problemMetadata[request.problem_type].label}</strong><span className="muted-line">{request.description}</span></div>
-                <div><small>Status</small><StatusBadge status={request.status} />{request.assigned_workshop && <span className="workshop-line">{request.assigned_workshop.name}</span>}</div>
-                <ArrowRightIcon className="row-arrow" />
+                <div><small>Status</small><StatusBadge status={request.status} /></div>
+                <div><small>Workshop</small>{request.assigned_workshop ? <strong>{request.assigned_workshop.name}</strong> : <span className="muted-line">—</span>}</div>
               </article>
             ))}
           </div>

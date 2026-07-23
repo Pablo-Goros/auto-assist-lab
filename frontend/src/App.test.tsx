@@ -184,7 +184,7 @@ describe('Phase 4 frontend', () => {
     render(<App authAdapter={adapter('owner-token')} />)
 
     expect(await screen.findByText('Honda Civic 2018')).toBeInTheDocument()
-    expect(screen.getByText('REQ-0012')).toBeInTheDocument()
+    expect(screen.getByText('0012')).toBeInTheDocument()
     expect(screen.getByText('Pending')).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Open profile' }))
     expect(await screen.findByText('pablo@example.com')).toBeInTheDocument()
